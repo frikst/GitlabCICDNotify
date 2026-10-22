@@ -2,7 +2,7 @@
 
 Podstatné používateľské zmeny aplikácie GitLab CI/CD Notify.
 
-Formát vychádza z [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/). Pravidlá verzovania vrátane používania Semantic Versioning zatiaľ nie sú stanovené.
+Formát vychádza z [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/). Verzie sa riadia [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); postup vydania a konvenciu pre úvodný vývoj opisuje [projektový skill publish-release](.agents/skills/publish-release/SKILL.md).
 
 ## Unreleased
 

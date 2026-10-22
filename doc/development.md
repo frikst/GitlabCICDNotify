@@ -61,6 +61,8 @@ Pri .NET 10 WPF cieli je `ProtectedData` dostupné bez explicitného balíčka; 
 
 ## Vydanie cez GitHub Actions
 
+Projektový skill [`publish-release`](../.agents/skills/publish-release/SKILL.md) pripraví vydanie na požiadavku, napríklad „vydaj novú verziu“. Ak používateľ neurčí verziu alebo typ zvýšenia, agent ho zvolí podľa obsahu `Unreleased` a SemVer. Prvé vydanie predvolene začína na `0.1.0`; počas úvodného vývoja `0.y.z` sa opravy vydávajú ako patch a nové funkcie či nekompatibilné zmeny ako minor. Stabilné `1.0.0` sa vydá na pokyn používateľa. Skill presunie položky do očíslovanej sekcie, ponechá prázdne `Unreleased`, overí release poznámky, vytvorí commit a anotovaný tag `vX.Y.Z`. Push vykoná iba na výslovný pokyn používateľa.
+
 Workflow `.github/workflows/release.yml` sa spúšťa pri pushi stabilného tagu `vX.Y.Z` (napr. `v1.2.3`). Pred tagovaním presuň vydávané položky z `Unreleased` do samostatnej sekcie `## [1.2.3] - 2026-10-22` v `CHANGELOG.md` a commitni ju. Podporovaný je aj nadpis `## 1.2.3`. Chýbajúca, duplicitná alebo prázdna sekcia zastaví vydanie; `Unreleased` sa nepoužije ako náhrada. Limity MSI pre verziu sú `255.255.65535`; úvodné nuly ani prerelease prípony nie sú podporované.
 
 Po kontrole tagu workflow publikuje self-contained `win-x64` aplikáciu s verziou z tagu, bez trimovania WPF. Projekt nemá unit testy a podľa zvoleného release postupu sa konzolový kontrolný program ani desktop kontroly v CI nespúšťajú. WiX SDK 6.0.2 zabalí celý publish adresár do MSI pre všetkých používateľov v Program Files a pridá odkaz do Štartu. Stabilný UpgradeCode zabezpečuje nahradenie staršej verzie a zákaz downgradu. MSI nemá vlastného sprievodcu; používa štandardný Windows Installer a vyžaduje správcu. Účty v LocalAppData nie sú súčasťou MSI.

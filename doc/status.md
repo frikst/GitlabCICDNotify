@@ -1,0 +1,26 @@
+# Aktuálny stav implementácie
+
+## Implementované
+
+- .NET 10 WPF aplikácia štartujúca do tray; tri položky menu, dvojklik na stav, skrytie a obnovenie existujúcich okien, explicitné ukončenie a obsluha ukončenia Windows relácie.
+- Viac účtov/inštancií cez osobné tokeny. Režim je samostatný pre používateľa + inštanciu; nový účet má `TriggeringUser`, obnovenie tokenu zachová jeho voľbu.
+- Globálna stratégia, projektový fallback, režim autora, stránkovanie, cache projektov, kontrolné body, retry, aktívne pipelines a perzistentná deduplikácia.
+- Toast s URL akciou, farebný prehľad posledných 100 pipelines relácie a predvolene zbalené logy (200 správ v pamäti).
+- DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render oboch okien a natívne desktop kontroly. Lokálny publish adresár.
+
+## Známe hranice
+
+- Globálny zoznam poskytuje len nedávne pipelines; dlhý offline interval nemusí byť celý obnoviteľný. Štandardná požiadavka nezahŕňa child pipelines. Neskorší retry ukončenej pipeline s rovnakým ID a pôvodným `created_at` sa po opustení okna nemusí obnoviť.
+- `CommitAuthor` porovnáva len autora commitu na SHA pipeline; neprechádza celý push ani autorov predchádzajúcich commitov. Syntetický merge commit s iným autorom môže zostať mimo výberu. E-maily sa obnovujú pri prihlásení, nie pri každom scane.
+- Projektové stratégie sledujú len členské nearchivované projekty. Nové projekty čakajú na obnovu 10-minútovej cache. Projektová `404` sa preskočí; `403` môže ukončiť celý scan účtu, ďalšie účty pokračujú.
+- `ActivePipelines` považuje za ukončené `success`, `failed`, `canceled`, `skipped`, `unavailable`; ostatné stavy vrátane `manual` môžu vyvolávať ďalšie kontroly. UI počítadlo aktívnych stavov má vlastný užší zoznam v `Dashboard`.
+- Prehľad/logy sa neukladajú ako kompletná história. `Notified` naopak rastie bez retencie. Toast a zápis jeho ID nie sú jedna transakcia; po páde je možné opakovanie.
+- Obnovenie prihlásenia aktualizuje token a e-maily, zatiaľ nie uložený `Username`/`Name`; premenovanie používateľa môže ovplyvniť projektový filter `username`.
+- Jeden koordinátor serializuje scany aj zmeny účtov; rozsiahly/pomalý scan môže odložiť zápis nastavení. Nie je implementovaný single-instance zámok ani koordinácia zápisov viacerých procesov.
+- Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, autostart, inštalátor, aktualizácie aplikácie, CI, ETag, WebSocket/SSE a webhook prijímač nie sú implementované.
+
+## Overenie a zostávajúce živé kontroly
+
+Počas implementácie prešli Release build bez upozornení, simulované API/state kontroly vrátane DPAPI a nezávislosti režimov účtov, vykreslenie okien a kontrola natívnej menu slučky. Pri poslednej zmene nastavení prešli aj render a hide/reopen/restore kontroly; natívny menu protokol sa nemenil.
+
+Reálny GitLab login, doručenie Windows toastu a otvorenie jeho URL neboli overené skutočným účtom. Test toastu kontroluje XML, nie shellové doručenie. Ručne treba overiť menu z panela skrytých ikon, klávesovú aktiváciu tray ikony, rôzne polohy taskbaru, zmiešané DPI, prepínanie kontrastu a Windows logoff. Manifest/renderer obsahujú podporu DPI a high contrast, ale samotný kód nie je dôkaz ich plného správania v shelli.

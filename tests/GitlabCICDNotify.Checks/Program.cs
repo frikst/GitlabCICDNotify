@@ -246,7 +246,15 @@ internal static class Program
         }
         Render(new StatusWindow(app), Path.Combine(folder, "status.png"));
         Render(new SettingsWindow(app), Path.Combine(folder, "settings.png"));
-        Check(true, "Render both WPF windows with representative fixture data");
+        Render(new AboutWindow(), Path.Combine(folder, "about.png"));
+        Check(true, "Render status, settings and About windows");
+        app.ShowAbout();
+        var about = app.Windows.OfType<AboutWindow>().Single();
+        about.Close();
+        Check(!about.IsVisible, "Closing About hides the window");
+        app.ShowAbout();
+        Check(about.IsVisible && ReferenceEquals(about, app.Windows.OfType<AboutWindow>().Single()), "Reopening About reuses the existing window");
+        about.Close();
         app.ShowStatus();
         var status = app.Windows.OfType<StatusWindow>().Single();
         status.Close();

@@ -11,7 +11,7 @@ dotnet run --project src/GitlabCICDNotify.App -c Release --no-build -- --setting
 dotnet run --project tests/GitlabCICDNotify.Checks -c Release --no-build
 ```
 
-`--status` otvorí stavové okno; bez parametra aplikácia zostane v tray. Publish je framework-dependent adresár vyžadujúci .NET 10 Desktop Runtime, nie samostatný inštalátor:
+`--status` otvorí stavové okno, `--about` dialóg O aplikácii; bez parametra aplikácia zostane v tray. Publish je framework-dependent adresár vyžadujúci .NET 10 Desktop Runtime, nie samostatný inštalátor:
 
 ```powershell
 dotnet publish src/GitlabCICDNotify.App -c Release -o artifacts/app --no-restore
@@ -42,7 +42,7 @@ dotnet run --project tests/GitlabCICDNotify.Checks -c Release --no-build -- --re
 dotnet run --project tests/GitlabCICDNotify.Checks -c Release --no-build -- --desktop
 ```
 
-`--render` vytvorí `artifacts/previews/status.png` a `settings.png` so simulovanými údajmi, otvorí/zavrie testovacie okná a overí hide/reopen/restore. `--desktop` navyše overuje `GUI_INMENUMODE`, owner HWND, zrušenie menu a callback mimo slučky. Posiela správy iba vlastným testovacím oknám. Render PNG nie je dôkaz správania na rôznych DPI monitoroch.
+`--render` vytvorí `artifacts/previews/status.png`, `settings.png` a `about.png` so simulovanými údajmi, otvorí/zavrie testovacie okná a overí hide/reopen/restore. `--desktop` navyše overuje `GUI_INMENUMODE`, owner HWND, zrušenie menu a callback mimo slučky. Posiela správy iba vlastným testovacím oknám. Render PNG nie je dôkaz správania na rôznych DPI monitoroch.
 
 Testy používajú `FakeGitLab : HttpMessageHandler`, `FakeNotifier : IPipelineNotifier` a dočasný `StateStore(path)`. Nemajú reálny token a neposielajú toasty. DPAPI však vyžaduje skutočný používateľský profil. Výpis `PASS: N checks` ráta aj jednotlivé overenia HTTP hlavičiek, nejde o počet samostatných scenárov. Kontroluj exit code testov osobitne; úspešný nasledujúci publish nesmie zakryť ich pád.
 

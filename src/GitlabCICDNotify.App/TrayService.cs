@@ -11,7 +11,7 @@ public sealed class TrayService : NativeWindow, IDisposable
     private readonly NotifyIcon _tray;
     private readonly Icon _icon;
     private readonly Action[] _actions;
-    private readonly string[] _labels = ["Stav", "Nastavenia", "Ukončiť"];
+    private readonly string[] _labels = ["Stav", "Nastavenia", "O aplikácii", "Ukončiť"];
     private Font? _font;
     private bool _menuOpen;
     private bool _disposed;
@@ -19,9 +19,9 @@ public sealed class TrayService : NativeWindow, IDisposable
     private int _width;
     private int _height;
 
-    public TrayService(Action status, Action settings, Action exit)
+    public TrayService(Action status, Action settings, Action about, Action exit)
     {
-        _actions = [status, settings, exit];
+        _actions = [status, settings, about, exit];
         CreateHandle(new CreateParams { Caption = "GitLab Notify menu owner", Style = unchecked((int)0x80000000), ExStyle = 0x80 });
         using var stream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/GitlabCICDNotify;component/Assets/App.ico"))!.Stream;
         _icon = new Icon(stream, SystemInformation.SmallIconSize);
@@ -83,7 +83,7 @@ public sealed class TrayService : NativeWindow, IDisposable
         if (m.Msg == 0x002C && m.LParam != 0)
         {
             var item = Marshal.PtrToStructure<MeasureItem>(m.LParam);
-            if (item.ControlType == 1 && item.Id is >= 1 and <= 3)
+            if (item.ControlType == 1 && item.Id >= 1 && item.Id <= _labels.Length)
             {
                 item.Width = (uint)_width; item.Height = (uint)_height;
                 Marshal.StructureToPtr(item, m.LParam, false); m.Result = 1; return;
@@ -92,7 +92,7 @@ public sealed class TrayService : NativeWindow, IDisposable
         if (m.Msg == 0x002B && m.LParam != 0)
         {
             var item = Marshal.PtrToStructure<DrawItem>(m.LParam);
-            if (item.ControlType == 1 && item.Id is >= 1 and <= 3 && _font != null)
+            if (item.ControlType == 1 && item.Id >= 1 && item.Id <= _labels.Length && _font != null)
             {
                 using var graphics = Graphics.FromHdc(item.Hdc);
                 var selected = (item.State & 1) != 0;

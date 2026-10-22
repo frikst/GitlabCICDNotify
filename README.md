@@ -8,7 +8,7 @@ Potrebujete Windows 10 2004 alebo novší / Windows 11 a [.NET 10 Desktop Runtim
 
 Ak máte pripravený lokálny výstup, spustite `artifacts/app/GitlabCICDNotify.exe`. Zachovajte aj ostatné súbory tohto priečinka. Zostavenie zo zdrojov opisuje [vývojový návod](doc/development.md).
 
-Po spustení aplikácia zostane v systémovej oblasti (systray). Pravým kliknutím otvoríte menu **Stav**, **Nastavenia**, **Ukončiť**; dvojklik otvorí stav. Zatvorenie okna ponechá sledovanie na pozadí. Aplikáciu ukončíte cez menu. Automatické spúšťanie po prihlásení do Windows sa nenastavuje.
+Po spustení aplikácia zostane v systémovej oblasti (systray). Pravým kliknutím otvoríte menu **Stav**, **Nastavenia**, **O aplikácii**, **Ukončiť**; dvojklik otvorí stav. Zatvorenie okna ponechá sledovanie na pozadí. Aplikáciu ukončíte cez menu. Dialóg **O aplikácii** zobrazuje verziu, autora, organizáciu a odkaz na web katedry. Automatické spúšťanie po prihlásení do Windows sa nenastavuje.
 
 ## Prvé prihlásenie
 

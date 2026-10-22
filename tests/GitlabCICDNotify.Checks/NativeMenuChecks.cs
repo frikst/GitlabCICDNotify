@@ -12,7 +12,7 @@ internal static class NativeMenuChecks
         var called = false;
         var inMenu = false;
         var correctOwner = false;
-        using var tray = new TrayService(() => called = true, () => called = true, () => called = true);
+        using var tray = new TrayService(() => called = true, () => called = true, () => called = true, () => called = true);
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         timer.Tick += (_, _) =>
         {
@@ -34,13 +34,13 @@ internal static class NativeMenuChecks
         var after = new GuiThreadInfo { Size = (uint)Marshal.SizeOf<GuiThreadInfo>() };
         check(GetGUIThreadInfo(GetCurrentThreadId(), ref after) && (after.Flags & 4) == 0, "Native menu loop exits cleanly");
 
-        // Activate the first command using messages directed solely to our own menu window.
+        // Activate About using messages directed solely to our own menu window.
         var callbackOutsideLoop = false;
-        using var selectedTray = new TrayService(() =>
+        using var selectedTray = new TrayService(() => { }, () => { }, () =>
         {
             var state = new GuiThreadInfo { Size = (uint)Marshal.SizeOf<GuiThreadInfo>() };
             callbackOutsideLoop = GetGUIThreadInfo(GetCurrentThreadId(), ref state) && (state.Flags & 4) == 0;
-        }, () => { }, () => { });
+        }, () => { });
         var attempts = 0;
         var selectTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         selectTimer.Tick += (_, _) =>
@@ -53,6 +53,8 @@ internal static class NativeMenuChecks
                 if (name.ToString() == "#32768")
                 {
                     PostMessage(window, 0x0100, 0x28, 0); // WM_KEYDOWN, VK_DOWN
+                    PostMessage(window, 0x0100, 0x28, 0);
+                    PostMessage(window, 0x0100, 0x28, 0);
                     PostMessage(window, 0x0100, 0x0D, 0); // WM_KEYDOWN, VK_RETURN
                 }
                 return true;
@@ -62,7 +64,7 @@ internal static class NativeMenuChecks
         selectTimer.Start();
         selectedTray.ShowMenu(new Point(80, 80));
         selectTimer.Stop();
-        check(callbackOutsideLoop, "Selected action executes after native menu cleanup");
+        check(callbackOutsideLoop, "About action executes after native menu cleanup");
     }
 
     [StructLayout(LayoutKind.Sequential)] private struct GuiThreadInfo

@@ -22,6 +22,7 @@ internal static class Program
             CheckUrls();
             CheckNotification();
             ApiChecks().GetAwaiter().GetResult();
+            TriggeringUserChecks().GetAwaiter().GetResult();
             MonitorChecks().GetAwaiter().GetResult();
             if (args.Contains("--render") || args.Contains("--desktop")) RenderWindows(args.Contains("--desktop"));
             Console.WriteLine($"PASS: {_passed} checks");
@@ -60,7 +61,7 @@ internal static class Program
         var account = new Account
         {
             Instance = "https://gitlab.example/gitlab/", Token = "test-token", Emails = identity.Emails,
-            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5)
+            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5), MonitoringMode = MonitoringMode.CommitAuthor
         };
         handler.ProjectsPaginated = true;
         var scan = await api.ScanAsync(account, default);
@@ -81,6 +82,45 @@ internal static class Program
         using var canceled = new CancellationTokenSource(); canceled.Cancel();
         try { await api.ScanAsync(account, canceled.Token); throw new Exception("Expected cancellation"); }
         catch (OperationCanceledException) { Check(true, "Cancel requests during shutdown"); }
+    }
+
+    private static async Task TriggeringUserChecks()
+    {
+        using var handler = new FakeGitLab { GlobalPagination = true };
+        using var http = new HttpClient(handler);
+        var api = new GitLabClient(http);
+        var account = new Account
+        {
+            Instance = "https://gitlab.example/gitlab/", Token = "test-token", Username = "user42", UserId = 42,
+            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5)
+        };
+        Check(account.MonitoringMode == MonitoringMode.TriggeringUser &&
+            JsonSerializer.Deserialize<Account>("{}")!.MonitoringMode == MonitoringMode.TriggeringUser, "New and legacy accounts default to triggering user");
+        var scan = await api.ScanAsync(account, default);
+        Check(scan.UsesGlobalEndpoint && scan.Pipelines.Count == 2 && scan.Pipelines.Select(p => p.ProjectId).Distinct().Count() == 2, "Global API follows cursor Link pagination across projects");
+        Check(handler.Requests.Count == 2 && handler.Requests.All(r => !r.Contains("&page=") && !r.Contains("?page=")), "Global discovery does not use offset pages or enumerate projects and commits");
+        Check(scan.Pipelines.Any(p => p.Sha == "other" && p.Source == "web"), "Triggering user mode includes another author's commit and manually started pipelines");
+        Check(scan.Pipelines.Any(p => p.Project == "team/project") && scan.Pipelines.Any(p => p.Project == "team/second"), "Derive project name from pipeline URL on GitLab 19.3 without embedded project data");
+        handler.GlobalPagination = false;
+        handler.MaliciousNextLink = true;
+        try { await api.ScanAsync(account, default); throw new Exception("Expected invalid pagination rejection"); }
+        catch (InvalidOperationException) { Check(handler.Requests.All(r => !r.StartsWith("https://attacker.example")), "Do not forward authentication to an external pagination link"); }
+        handler.MaliciousNextLink = false;
+        handler.GlobalFailure = HttpStatusCode.Forbidden;
+        var before = handler.Requests.Count;
+        try { await api.ScanAsync(account, default); throw new Exception("Expected permission failure"); }
+        catch (GitLabApiException ex) { Check(ex.Status == HttpStatusCode.Forbidden && handler.Requests.Count == before + 1, "Permission failure is not mistaken for missing global API"); }
+        handler.GlobalFailure = HttpStatusCode.NotFound;
+        handler.Requests.Clear();
+        scan = await api.ScanAsync(account, default);
+        await api.ScanAsync(account, default);
+        Check(!scan.UsesGlobalEndpoint && handler.Requests.Count(r => new Uri(r).AbsolutePath == "/gitlab/api/v4/pipelines") == 1, "Old GitLab probes unsupported global API only once per instance");
+        Check(handler.Requests.Count(r => new Uri(r).AbsolutePath.EndsWith("/projects")) == 1, "Fallback caches project list across polling cycles");
+        Check(handler.Requests.Where(r => r.Contains("/projects/1/pipelines?")).All(r => r.Contains("username=user42")) &&
+            !handler.Requests.Any(r => r.Contains("/repository/commits/")), "Fallback filters triggering username server-side without fetching commits");
+        account.MonitoringMode = MonitoringMode.CommitAuthor;
+        try { await api.ScanAsync(account, default); throw new Exception("Expected missing author email error"); }
+        catch (InvalidOperationException) { Check(true, "Only author mode requires commit email addresses"); }
     }
 
     private static void CheckNotification()
@@ -119,6 +159,7 @@ internal static class Program
             handler.UserId = 43;
             await monitor.AddAsync("https://gitlab.example/gitlab", "second-user-token", default);
             Check(dashboard.Accounts.Count == 2, "Allow another user on the same GitLab instance");
+            Check(dashboard.AccountSettings.Count == 2 && dashboard.AccountSettings.All(a => a.Mode == MonitoringMode.TriggeringUser), "Each user on the same instance has its own default monitoring setting");
             // Monitor starts at sign-in; fixture pipelines represent a later push.
             handler.Now = DateTimeOffset.UtcNow.AddMinutes(1);
             await monitor.PollAsync(default);
@@ -130,13 +171,51 @@ internal static class Program
             await restarted.InitializeAsync(default);
             await restarted.PollAsync(default);
             Check(notifier.Count == 4, "Restart retains notification deduplication");
+            handler.OmitGlobalPipelines = true;
+            handler.ActiveStatus = "success";
+            handler.Requests.Clear();
+            await restarted.PollAsync(default);
+            Check(handler.Requests.Count(r => r.Contains("/projects/") && r.Contains("/pipelines/")) == 4 &&
+                (await store.LoadAsync(default)).All(a => a.ActivePipelines.Count == 0), "Refresh older active pipelines beyond creation window and stop tracking completed ones");
+            Check(notifier.Count == 4, "Status refresh never repeats new-pipeline notification");
+            handler.Requests.Clear();
+            await restarted.PollAsync(default);
+            Check(handler.Requests.Count == 2, "Idle monitoring uses one small global request per account");
             var before = (await store.LoadAsync(default)).First().Checkpoint;
             handler.Failure = HttpStatusCode.InternalServerError;
             await restarted.PollAsync(default);
             Check((await store.LoadAsync(default)).First().Checkpoint == before, "Failed scan does not advance checkpoint");
             handler.Failure = null;
+            // Return storage ownership to the original coordinator after the restart simulation.
+            await monitor.PollAsync(default);
+            var changedAccountId = dashboard.Accounts.First().Id;
+            var otherBefore = (await store.LoadAsync(default)).Single(a => a.Id != changedAccountId);
+            await monitor.SetMonitoringModeAsync(changedAccountId, MonitoringMode.CommitAuthor, default);
+            var afterChange = await store.LoadAsync(default);
+            var otherAfter = afterChange.Single(a => a.Id != changedAccountId);
+            Check(afterChange.Single(a => a.Id == changedAccountId).MonitoringMode == MonitoringMode.CommitAuthor &&
+                otherAfter.MonitoringMode == MonitoringMode.TriggeringUser && otherAfter.Checkpoint == otherBefore.Checkpoint &&
+                otherAfter.MonitoringSince == otherBefore.MonitoringSince && dashboard.Pipelines.Count == 2 &&
+                dashboard.Pipelines.All(p => p.AccountId != changedAccountId),
+                "Changing one account leaves another user on the same instance and its overview untouched");
+            handler.UserId = 42;
+            await monitor.AddAsync("https://gitlab.example/gitlab", "refreshed-token", default);
+            Check((await store.LoadAsync(default)).Single(a => a.Id == changedAccountId).MonitoringMode == MonitoringMode.CommitAuthor,
+                "Renewing authentication preserves the account monitoring preference");
+            handler.UserId = 44;
+            await monitor.AddAsync("https://gitlab.example/gitlab", "third-user-token", default);
+            Check((await store.LoadAsync(default)).Single(a => a.UserId == 44).MonitoringMode == MonitoringMode.TriggeringUser, "New user on existing instance starts with the default mode");
+            handler.UserId = 42;
+            await monitor.AddAsync("https://another.example", "another-instance-token", default);
+            Check((await store.LoadAsync(default)).Single(a => a.Instance == "https://another.example/").MonitoringMode == MonitoringMode.TriggeringUser,
+                "Same user on a different GitLab instance keeps independent default mode");
+            var modesAfterRestart = new Dashboard();
+            await new MonitorService(new GitLabClient(http), store, notifier, modesAfterRestart).InitializeAsync(default);
+            Check(modesAfterRestart.AccountSettings.Count == 4 && modesAfterRestart.AccountSettings.Single(a => a.Id == changedAccountId).Mode == MonitoringMode.CommitAuthor &&
+                modesAfterRestart.AccountSettings.Where(a => a.Id != changedAccountId).All(a => a.Mode == MonitoringMode.TriggeringUser),
+                "Independent user-instance modes survive encrypted storage and restart");
             await monitor.RemoveAsync(dashboard.Accounts.First().Id, default);
-            Check((await store.LoadAsync(default)).Count == 1 && dashboard.Accounts.Count == 1, "Disconnect removes encrypted account and dashboard entry");
+            Check((await store.LoadAsync(default)).Count == 3 && dashboard.Accounts.Count == 3, "Disconnect removes encrypted account and dashboard entry");
             await File.WriteAllTextAsync(path, "corrupted");
             var damaged = new MonitorService(new GitLabClient(http), store, notifier, new Dashboard());
             try { await damaged.InitializeAsync(default); throw new Exception("Expected corrupt storage failure"); }
@@ -159,6 +238,7 @@ internal static class Program
         Directory.CreateDirectory(folder);
         var accountId = Guid.NewGuid();
         app.Dashboard.Accounts.Add(new AccountRow(accountId, "jan.novak", "https://gitlab.example.com/", "Sleduje", "12 projektov · posledná kontrola 14:32:08", Brushes.SeaGreen));
+        app.Dashboard.AccountSettings.Add(new AccountSettingsRow(accountId, "jan.novak", "https://gitlab.example.com/", MonitoringMode.TriggeringUser));
         foreach (var item in new[] { (101L, "running", "feature/notifications"), (100L, "success", "main"), (99L, "failed", "fix/build-cache") })
         {
             app.Dashboard.Pipelines.Add(new PipelineRow(accountId, new Pipeline(item.Item1, 1, "team / deployment-service", item.Item3, "a7b648debaae", item.Item2,
@@ -205,6 +285,11 @@ internal static class Program
         public HttpStatusCode? Failure { get; set; }
         public bool ProjectsPaginated { get; set; }
         public bool ReturnMaliciousUrl { get; set; }
+        public bool GlobalPagination { get; set; }
+        public bool MaliciousNextLink { get; set; }
+        public HttpStatusCode? GlobalFailure { get; set; }
+        public bool OmitGlobalPipelines { get; set; }
+        public string ActiveStatus { get; set; } = "running";
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -220,6 +305,7 @@ internal static class Program
             }
             object data;
             string? next = null;
+            string? linkNext = null;
             var path = request.RequestUri.AbsolutePath;
             if (path.EndsWith("/user")) data = new { id = UserId, username = "user" + UserId, name = "Test User", email = "author@example.com", commit_email = "author@example.com" };
             else if (path.EndsWith("/user/emails")) data = new object[] { new { email = "alias@example.com", confirmed_at = (DateTimeOffset?)Now }, new { email = "unconfirmed@example.com", confirmed_at = (DateTimeOffset?)null } };
@@ -229,6 +315,18 @@ internal static class Program
                 data = new[] { new { id = second ? 2 : 1, path_with_namespace = second ? "team/second" : "team/project" } };
                 next = ProjectsPaginated && !second ? "2" : "";
             }
+            else if (path.EndsWith("/api/v4/pipelines"))
+            {
+                if (GlobalFailure is { } status) return Task.FromResult(new HttpResponseMessage(status));
+                var second = url.Contains("cursor=next");
+                data = OmitGlobalPipelines ? Array.Empty<object>() : GlobalPagination
+                    ? new[] { PipelineFixture(second ? 11 : 10, second ? "other" : "own", Now, second ? "web" : "push") }
+                    : new[] { PipelineFixture(10, "own", Now, "push"), PipelineFixture(11, "other", Now, "web") };
+                if (GlobalPagination && !second) linkNext = "https://gitlab.example/gitlab/api/v4/pipelines?cursor=next&per_page=100";
+                if (MaliciousNextLink) linkNext = "https://attacker.example/api/v4/pipelines?cursor=next";
+            }
+            else if (System.Text.RegularExpressions.Regex.IsMatch(path, @"/pipelines/\d+$"))
+                data = PipelineFixture(long.Parse(path.Split('/').Last()), "own", Now, "push", ActiveStatus);
             else if (path.EndsWith("/pipelines"))
             {
                 var mr = url.Contains("source=merge_request_event");
@@ -243,13 +341,14 @@ internal static class Program
             else throw new InvalidOperationException("Unexpected request: " + url);
             var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json") };
             if (next != null) response.Headers.TryAddWithoutValidation("X-Next-Page", next);
+            if (linkNext != null) response.Headers.TryAddWithoutValidation("Link", $"<{linkNext}>; rel=\"next\"");
             return Task.FromResult(response);
         }
 
-        private object PipelineFixture(long id, string sha, DateTimeOffset time, string source) => new
+        private object PipelineFixture(long id, string sha, DateTimeOffset time, string source, string status = "running") => new
         {
-            id, sha, source, @ref = "main", status = "running", created_at = time, updated_at = time,
-            web_url = ReturnMaliciousUrl ? "https://attacker.example/pipeline" : $"https://gitlab.example/gitlab/team/project/-/pipelines/{id}"
+            id, sha, source, project_id = id == 11 ? 2 : 1, @ref = "main", status, created_at = time, updated_at = time,
+            web_url = ReturnMaliciousUrl ? "https://attacker.example/pipeline" : $"https://gitlab.example/gitlab/team/{(id == 11 ? "second" : "project")}/-/pipelines/{id}"
         };
     }
 }

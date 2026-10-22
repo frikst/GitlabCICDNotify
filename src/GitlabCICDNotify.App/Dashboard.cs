@@ -9,6 +9,13 @@ using GitlabCICDNotify.Core;
 namespace GitlabCICDNotify.App;
 
 public sealed record AccountRow(Guid Id, string Username, string Instance, string State, string Detail, Brush Color);
+public sealed class AccountSettingsRow(Guid id, string username, string instance, MonitoringMode mode)
+{
+    public Guid Id { get; } = id;
+    public string Username { get; } = username;
+    public string Instance { get; } = instance;
+    public MonitoringMode Mode { get; set; } = mode;
+}
 public sealed record PipelineRow(Guid AccountId, Pipeline Pipeline, string Username, string Instance)
 {
     public string Key => $"{AccountId}:{Pipeline.Key}";
@@ -18,7 +25,7 @@ public sealed record PipelineRow(Guid AccountId, Pipeline Pipeline, string Usern
     public string Status => Pipeline.Status switch
     {
         "success" => "Úspešná", "failed" => "Zlyhala", "running" => "Beží", "pending" => "Čaká",
-        "created" => "Vytvorená", "canceled" => "Zrušená", "skipped" => "Preskočená", "manual" => "Manuálny krok", _ => Pipeline.Status
+        "created" => "Vytvorená", "canceled" => "Zrušená", "skipped" => "Preskočená", "manual" => "Manuálny krok", "unavailable" => "Nedostupná", _ => Pipeline.Status
     };
     public Brush Color => Pipeline.Status switch
     {
@@ -30,6 +37,7 @@ public sealed record PipelineRow(Guid AccountId, Pipeline Pipeline, string Usern
 public sealed class Dashboard : INotifyPropertyChanged
 {
     public ObservableCollection<AccountRow> Accounts { get; } = [];
+    public ObservableCollection<AccountSettingsRow> AccountSettings { get; } = [];
     public ObservableCollection<PipelineRow> Pipelines { get; } = [];
     public ObservableCollection<string> Logs { get; } = [];
     public string Summary => Accounts.Count == 0 ? "Pridajte prvý GitLab účet v nastaveniach." :

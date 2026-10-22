@@ -1,5 +1,7 @@
 namespace GitlabCICDNotify.Core;
 
+public enum MonitoringMode { TriggeringUser = 0, CommitAuthor = 1 }
+
 public sealed class Account
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -9,6 +11,8 @@ public sealed class Account
     public string Name { get; set; } = "";
     public string Token { get; set; } = "";
     public List<string> Emails { get; set; } = [];
+    public MonitoringMode MonitoringMode { get; set; } = MonitoringMode.TriggeringUser;
+    public List<Pipeline> ActivePipelines { get; set; } = [];
     public DateTimeOffset MonitoringSince { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset Checkpoint { get; set; } = DateTimeOffset.UtcNow;
     public Dictionary<string, DateTimeOffset> Notified { get; set; } = [];
@@ -19,10 +23,11 @@ public sealed record Pipeline(long Id, long ProjectId, string Project, string Re
 {
     public string Key => $"{ProjectId}:{Id}";
     public bool IsCommitTriggered => Source is "push" or "merge_request_event";
+    public bool IsActive => Status is not ("success" or "failed" or "canceled" or "skipped" or "unavailable");
 }
 
 public sealed record Identity(long Id, string Username, string Name, List<string> Emails);
-public sealed record ScanResult(DateTimeOffset StartedAt, IReadOnlyList<Pipeline> Pipelines, int ProjectCount);
+public sealed record ScanResult(DateTimeOffset StartedAt, IReadOnlyList<Pipeline> Pipelines, int ProjectCount, bool UsesGlobalEndpoint = false);
 
 public static class InstanceUrl
 {

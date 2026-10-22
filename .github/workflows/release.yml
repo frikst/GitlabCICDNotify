@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DOTNET_NOLOGO: 'true'
+      DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Validate tag and extract changelog
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          ./build/Prepare-Release.ps1 -Tag $env:RELEASE_TAG
+
+      # Projekt nemá unit testy. Konzolové/desktop kontroly tu nespúšťame.
+      - name: Publish self-contained Windows x64 application
+        run: |
+          dotnet publish src/GitlabCICDNotify.App -c Release -r win-x64 --self-contained true -p:Version=$env:RELEASE_VERSION -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o artifacts/publish
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+
+      - name: Build MSI with WiX
+        run: |
+          dotnet build installer/GitlabCICDNotify.Installer.wixproj -c Release -p:ReleaseVersion=$env:RELEASE_VERSION -p:PublishDir="$pwd/artifacts/publish" -o artifacts/installer
+          if ($LASTEXITCODE -ne 0) { throw 'MSI build failed.' }
+          New-Item -ItemType Directory -Force artifacts/release | Out-Null
+          Copy-Item artifacts/installer/GitlabCICDNotify.msi "artifacts/release/GitlabCICDNotify-$env:RELEASE_VERSION-win-x64.msi"
+          Compress-Archive -Path artifacts/publish/* -DestinationPath "artifacts/release/GitlabCICDNotify-$env:RELEASE_VERSION-win-x64.zip"
+
+      # Súbory idú priamo do release; žiadne upload-artifact ani trvalá build cache.
+      - name: Create and publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $existing = gh release view $env:RELEASE_TAG --json isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            if (-not ($existing | ConvertFrom-Json).isDraft) { throw 'Release is already published; refusing to replace its assets.' }
+            gh release edit $env:RELEASE_TAG --title $env:RELEASE_TAG --notes-file artifacts/release-notes.md
+          } else {
+            gh release create $env:RELEASE_TAG --verify-tag --draft --title $env:RELEASE_TAG --notes-file artifacts/release-notes.md
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Could not prepare draft release.' }
+          $assets = @(Get-ChildItem artifacts/release -File | ForEach-Object FullName)
+          gh release upload $env:RELEASE_TAG @assets --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed.' }
+          gh release edit $env:RELEASE_TAG --draft=false
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }

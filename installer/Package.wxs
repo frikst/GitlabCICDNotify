@@ -1,0 +1,32 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="GitLab CI/CD Notify" Manufacturer="GitLab CI/CD Notify"
+           Version="$(ReleaseVersion)" Language="1051" Scope="perMachine"
+           UpgradeCode="D2C7A795-8D3B-48BE-A46B-B1C31D732F51">
+    <MajorUpgrade DowngradeErrorMessage="Novšia verzia aplikácie GitLab CI/CD Notify je už nainštalovaná." />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="AppIcon.exe" SourceFile="$(PublishDir)\GitlabCICDNotify.exe" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="GitLab CI-CD Notify" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Application" Title="GitLab CI/CD Notify" Level="1">
+      <ComponentGroupRef Id="PublishedFiles" />
+    </Feature>
+  </Package>
+  <Fragment>
+    <ComponentGroup Id="PublishedFiles" Directory="INSTALLFOLDER">
+      <Component Id="ApplicationExecutable" Guid="B0675B5B-6C19-4DCA-A6C0-DA1EF651BBE3">
+        <File Id="ApplicationExe" Source="$(PublishDir)\GitlabCICDNotify.exe" KeyPath="yes">
+          <Shortcut Id="AppShortcut" Directory="ProgramMenuFolder" Name="GitLab CI-CD Notify"
+                    WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.exe" Advertise="yes" />
+        </File>
+      </Component>
+      <Files Include="$(PublishDir)\**">
+        <Exclude Files="$(PublishDir)\GitlabCICDNotify.exe" />
+      </Files>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

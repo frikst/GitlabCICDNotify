@@ -26,7 +26,7 @@ Výstup `artifacts/app/GitlabCICDNotify.exe` potrebuje aj ostatné súbory adres
 - Sieťové DTO sú súkromné v `GitLabClient`, JSON API mapuje `SnakeCaseLower`. Lokálny JSON serializuje priamo `List<Account>` s predvoleným nastavením serializéra; pri zmene enumov zachovaj ich uložené číselné hodnoty.
 - UI štýly sú v `App.xaml`. `Dashboard` obsahuje prezentáciu a obmedzený prehľad/logy; token drž iba v doménovom účte. Zmeny nastavení vykonávaj cez `MonitorService`, nie priamo zápisom z okna.
 - Asynchrónne UI eventy zachytávajú chyby a používajú `FriendlyError`; shutdown cancellation sa nemá hlásiť ako chyba účtu. Nové sieťové operácie musia prenášať cancellation token.
-- Testy udržuj pri existujúcom konzolovom kontrolnom programe; v repozitári nie je xUnit/NUnit ani CI konfigurácia. `dotnet test` ho nespúšťa. Nesúvisiace refaktoringy a zmeny závislostí oddeľ od funkčnej úpravy.
+- Testy udržuj pri existujúcom konzolovom kontrolnom programe; v repozitári nie je xUnit/NUnit. `dotnet test` ho nespúšťa. Release workflow konzolové ani desktop kontroly nespúšťa. Nesúvisiace refaktoringy a zmeny závislostí oddeľ od funkčnej úpravy.
 
 ## Rozsah kontrol
 
@@ -58,3 +58,23 @@ $env:NUGET_PACKAGES = Join-Path $PWD '.tools/packages'
 Premenné drž konzistentné pri restore/build/run/publish. Restore v sandboxe narazil aj na neprístupný používateľský `NuGet.Config`; samotný `--configfile` prekážku neodstránil a bolo potrebné vykonanie s prístupom k profilu. DPAPI test pod obmedzeným profilom zlyhal na kryptografickej operácii, pod používateľským profilom prešiel. Neobchádzaj to ukladaním tokenov bez šifrovania.
 
 Pri .NET 10 WPF cieli je `ProtectedData` dostupné bez explicitného balíčka; jeho pridaním vzniklo `NU1510` a pri warnings-as-errors zlyhal restore. Native menu test odhalil chybný príznak: `MIIM_FTYPE=0x100`, nie staré `MIIM_TYPE=0x10` kombinované s `MIIM_STRING`. Pack URI ikony obsahuje názov assembly, aby fungovalo aj pri spustení z kontrolného programu.
+
+## Vydanie cez GitHub Actions
+
+Workflow `.github/workflows/release.yml` sa spúšťa pri pushi stabilného tagu `vX.Y.Z` (napr. `v1.2.3`). Pred tagovaním presuň vydávané položky z `Unreleased` do samostatnej sekcie `## [1.2.3] - 2026-10-22` v `CHANGELOG.md` a commitni ju. Podporovaný je aj nadpis `## 1.2.3`. Chýbajúca, duplicitná alebo prázdna sekcia zastaví vydanie; `Unreleased` sa nepoužije ako náhrada. Limity MSI pre verziu sú `255.255.65535`; úvodné nuly ani prerelease prípony nie sú podporované.
+
+Po kontrole tagu workflow publikuje self-contained `win-x64` aplikáciu s verziou z tagu, bez trimovania WPF. Projekt nemá unit testy a podľa zvoleného release postupu sa konzolový kontrolný program ani desktop kontroly v CI nespúšťajú. WiX SDK 6.0.2 zabalí celý publish adresár do MSI pre všetkých používateľov v Program Files a pridá odkaz do Štartu. Stabilný UpgradeCode zabezpečuje nahradenie staršej verzie a zákaz downgradu. MSI nemá vlastného sprievodcu; používa štandardný Windows Installer a vyžaduje správcu. Účty v LocalAppData nie sú súčasťou MSI.
+
+Do release sa pripojí `GitlabCICDNotify-X.Y.Z-win-x64.msi` a prenosný `.zip`. Poznámky sú iba z príslušnej sekcie changelogu. Release sa najprv vytvorí ako draft a zverejní až po úspešnom nahratí oboch súborov. Opakovaný beh môže dokončiť existujúci draft; zverejnený release zámerne neprepisuje. Používa vstavaný `GITHUB_TOKEN` s `contents: write`; vlastný PAT nie je potrebný. V nastaveniach repozitára musí byť povolený beh GitHub Actions a zápis release.
+
+Build aj publikovanie prebiehajú v jednom Windows jobe: žiadny `upload-artifact`, zdieľaná build cache ani dočasné Actions artefakty sa neukladajú. Výstupy zostanú iba ako trvalé prílohy release. Pri zlyhaní jobu treba build zopakovať; diagnostika zostáva v štandardnom logu behu.
+
+Lokálne zostavenie rovnakého balíka (PowerShell 7, z koreňa checkoutu):
+
+```powershell
+./build/Prepare-Release.ps1 -Tag v1.2.3
+dotnet publish src/GitlabCICDNotify.App -c Release -r win-x64 --self-contained true -p:Version=1.2.3 -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o artifacts/publish
+dotnet build installer/GitlabCICDNotify.Installer.wixproj -c Release -p:ReleaseVersion=1.2.3 -p:PublishDir="$pwd/artifacts/publish" -o artifacts/installer
+```
+
+Pri zmene balenia over self-contained publish a zostavenie MSI. Živú inštaláciu, upgrade a odinštalovanie overuj v čistej Windows relácii; samotný úspešný build ich nepotvrdzuje. Verziu WiX aj schému overuj podľa [dokumentácie WiX](https://docs.firegiant.com/wix/using-wix/); publikovanie používa [GitHub CLI release](https://cli.github.com/manual/gh_release_create).

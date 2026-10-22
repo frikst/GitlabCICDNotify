@@ -43,3 +43,7 @@ Pri chybe otvorte **Stav → Diagnostické logy** a overte sieť, oprávnenie `r
 ## Vývojová dokumentácia
 
 Začnite v [AGENTS.md](AGENTS.md); odkazy na architektúru, rozhodnutia, postupy a stav implementácie sú v jeho úvode.
+
+## Licencia
+
+Projekt je licencovaný pod GNU General Public License, verzia 3 (GPL-3.0-only). Úplné znenie je v súbore [LICENSE](LICENSE).

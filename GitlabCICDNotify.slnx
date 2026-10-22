@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GitlabCICDNotify.App/GitlabCICDNotify.App.csproj" />
+    <Project Path="src/GitlabCICDNotify.Core/GitlabCICDNotify.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GitlabCICDNotify.Checks/GitlabCICDNotify.Checks.csproj" />
+  </Folder>
+</Solution>

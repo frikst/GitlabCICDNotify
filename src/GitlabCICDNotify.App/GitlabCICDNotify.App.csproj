@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\App.ico</ApplicationIcon>
+    <AssemblyName>GitlabCICDNotify</AssemblyName><Product>GitLab CI/CD Notify</Product>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GitlabCICDNotify.Core\GitlabCICDNotify.Core.csproj" />
+    <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
+    <Resource Include="Assets\App.ico" />
+  </ItemGroup>
+</Project>

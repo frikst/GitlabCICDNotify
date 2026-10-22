@@ -42,6 +42,8 @@ Pri chybe otvorte **Stav → Diagnostické logy** a overte sieť, oprávnenie `r
 
 ## Vývojová dokumentácia
 
+Prehľad používateľských zmien je v [changelogu](CHANGELOG.md).
+
 Začnite v [AGENTS.md](AGENTS.md); odkazy na architektúru, rozhodnutia, postupy a stav implementácie sú v jeho úvode.
 
 ## Licencia

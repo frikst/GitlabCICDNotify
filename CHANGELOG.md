@@ -6,6 +6,8 @@ Formát vychádza z [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0
 
 ## Unreleased
 
+## [1.0.0] - 2026-10-23
+
 ### Added
 
 - Sledovanie GitLab CI/CD pipelines na pozadí vo Windows so slovenským rozhraním a ovládaním cez tray menu. Zatvorenie okna ponechá sledovanie spustené.

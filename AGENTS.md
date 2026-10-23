@@ -23,6 +23,8 @@ Pred zásahom prečítaj relevantný dokument a aktuálny kód. Pri zmene správ
 
 ## Dokončenie zmeny
 
+Pri editovaní zdrojových súborov striktne dodržiavaj pravidlá v `.editorconfig`. Po každej ucelenej zmene spusti `dotnet format`.
+
 Spusť overenie primerané zásahu podľa [vývojového návodu](doc/development.md). Pri zmene API/stavu doplň významné kontroly do existujúceho kontrolného programu. Pri zmene UI vykresli a pozri príslušné okno; pri zmene tray protokolu použi aj `--desktop`.
 
 Pri čisto dokumentačnej zmene stačí kontrola faktov, odkazov a diffu. V závere odlíš vykonané kontroly od neovereného živého správania. Generované `bin/`, `obj/`, `.tools/` a `artifacts/` sa necommitujú.

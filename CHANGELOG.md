@@ -19,4 +19,8 @@ Formát vychádza z [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0
 - Začiatok sledovania nového účtu alebo zmeneného režimu od aktuálneho času bez oznamovania staršej histórie.
 - Dialóg **O aplikácii** s verziou, autorom, organizáciou a odkazom na web katedry.
 
+### Changed
+
+- Nová ikona aplikácie so zvončekom, symbolom spustenia a bodkou oznámenia v systémovej oblasti, oknách a dialógu O aplikácii.
+
 Podrobné obmedzenia sledovania a rozsah overenia uvádza [stav implementácie](doc/status.md).

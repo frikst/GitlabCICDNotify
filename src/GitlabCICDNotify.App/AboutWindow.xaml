@@ -4,6 +4,9 @@
         Title="O aplikácii · GitLab CI/CD Notify" Width="620" SizeToContent="Height"
         ResizeMode="NoResize" Icon="Assets/App.ico" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" FontSize="14" Background="{StaticResource CanvasBrush}" Foreground="{StaticResource InkBrush}">
+  <Window.Resources>
+    <ResourceDictionary Source="/GitlabCICDNotify;component/Assets/AppIcon.xaml"/>
+  </Window.Resources>
   <Grid Margin="32">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
@@ -11,7 +14,7 @@
     </Grid.RowDefinitions>
     <Grid Margin="0,0,0,28">
       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-      <Image x:Name="AppImage" Width="72" Height="72" Margin="0,0,20,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+      <Image x:Name="AppImage" Width="72" Height="72" Margin="0,0,20,0" Source="{StaticResource AppIcon}"/>
       <StackPanel Grid.Column="1" VerticalAlignment="Center">
         <TextBlock Text="GitLab CI/CD Notify" FontSize="28" FontWeight="SemiBold"/>
         <TextBlock x:Name="VersionText" Foreground="{StaticResource MutedBrush}" FontSize="16" Margin="0,5,0,0"/>

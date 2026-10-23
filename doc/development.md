@@ -28,6 +28,8 @@ Výstup `artifacts/app/GitlabCICDNotify.exe` potrebuje aj ostatné súbory adres
 - Asynchrónne UI eventy zachytávajú chyby a používajú `FriendlyError`; shutdown cancellation sa nemá hlásiť ako chyba účtu. Nové sieťové operácie musia prenášať cancellation token.
 - Testy udržuj pri existujúcom konzolovom kontrolnom programe; v repozitári nie je xUnit/NUnit. `dotnet test` ho nespúšťa. Release workflow konzolové ani desktop kontroly nespúšťa. Nesúvisiace refaktoringy a zmeny závislostí oddeľ od funkčnej úpravy.
 
+Vektorový zdroj ikony je WPF `DrawingImage` v [AppIcon.xaml](../src/GitlabCICDNotify.App/Assets/AppIcon.xaml), ktorý priamo používa dialóg O aplikácii. Aplikácia používa [App.ico](../src/GitlabCICDNotify.App/Assets/App.ico) so samostatnými rámcami 16, 20, 24, 32, 40, 48, 64, 96, 128 a 256 px. Pri úprave ikony zachovaj priehľadné pozadie a aktualizuj XAML aj ICO; skontroluj malé rozmery na svetlom aj tmavom pozadí.
+
 ## Rozsah kontrol
 
 | Zmena | Overenie |

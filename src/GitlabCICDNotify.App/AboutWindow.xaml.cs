@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
 namespace GitlabCICDNotify.App;
@@ -11,9 +9,6 @@ public partial class AboutWindow : Window
     public AboutWindow()
     {
         InitializeComponent();
-        var icon = BitmapDecoder.Create(new Uri("pack://application:,,,/GitlabCICDNotify;component/Assets/App.ico"),
-            BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-        AppImage.Source = icon.Frames.MaxBy(frame => frame.PixelWidth);
         VersionText.Text = $"Verzia {typeof(AboutWindow).Assembly.GetName().Version?.ToString(3)}";
     }
 

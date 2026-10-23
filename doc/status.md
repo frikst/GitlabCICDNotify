@@ -3,10 +3,10 @@
 ## Implementované
 
 - .NET 10 WPF aplikácia štartujúca do tray; štyri položky menu vrátane dialógu O aplikácii s verziou, autorom a organizáciou, dvojklik na stav, skrytie a obnovenie existujúcich okien, explicitné ukončenie a obsluha ukončenia Windows relácie.
-- Viac účtov/inštancií cez osobné tokeny. Režim je samostatný pre používateľa + inštanciu; nový účet má `TriggeringUser`, obnovenie tokenu zachová jeho voľbu.
+- Viac účtov/inštancií cez osobné tokeny v samostatnom okne **Pripojiť účet**, ktoré sa otvára z nastavení. Režim je samostatný pre používateľa + inštanciu; nový účet má `TriggeringUser`, obnovenie tokenu zachová jeho voľbu.
 - Globálna stratégia, projektový fallback, režim autora, stránkovanie, cache projektov, kontrolné body, retry, aktívne pipelines a perzistentná deduplikácia.
 - Toast s URL akciou, farebný prehľad posledných 100 pipelines relácie a predvolene zbalené logy (200 správ v pamäti).
-- DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render všetkých troch okien a natívne desktop kontroly. Lokálny publish adresár.
+- DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render všetkých štyroch okien a natívne desktop kontroly. Lokálny publish adresár.
 - GitHub Actions release workflow pre tagy `vX.Y.Z`: self-contained Windows x64 ZIP, MSI cez WiX a release poznámky zo sekcie verzie v changelogu. Bez spúšťania kontrolného programu a bez dočasných Actions artefaktov.
 
 ## Známe hranice
@@ -27,5 +27,7 @@ Pri doplnení release workflow prešli lokálny self-contained publish `win-x64`
 Počas implementácie prešli Release build bez upozornení, simulované API/state kontroly vrátane DPAPI a nezávislosti režimov účtov, vykreslenie okien a kontrola natívnej menu slučky. Pri poslednej zmene nastavení prešli aj render a hide/reopen/restore kontroly; natívny menu protokol sa nemenil.
 
 Pri doplnení dialógu O aplikácii prešli Release build, 128 kontrol vrátane renderu troch okien, skrytia a opätovného otvorenia dialógu a výberu jeho tray položky až po skončení natívnej menu slučky. Náhľad dialógu bol vizuálne skontrolovaný.
+
+Po presune pripojenia účtu do samostatného okna prešli Release build bez upozornení a 126 kontrol vrátane renderu štyroch okien, skrytia nového okna, vymazania vloženého tokenu a jeho opätovného otvorenia a obnovenia z minimalizácie. Náhľady nastavení a pripojenia účtu boli vizuálne skontrolované.
 
 Reálny GitLab login, doručenie Windows toastu a otvorenie jeho URL neboli overené skutočným účtom. Test toastu kontroluje XML, nie shellové doručenie. Ručne treba overiť menu z panela skrytých ikon, klávesovú aktiváciu tray ikony, rôzne polohy taskbaru, zmiešané DPI, prepínanie kontrastu a Windows logoff. Manifest/renderer obsahujú podporu DPI a high contrast, ale samotný kód nie je dôkaz ich plného správania v shelli.

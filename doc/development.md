@@ -42,7 +42,7 @@ dotnet run --project tests/GitlabCICDNotify.Checks -c Release --no-build -- --re
 dotnet run --project tests/GitlabCICDNotify.Checks -c Release --no-build -- --desktop
 ```
 
-`--render` vytvorí `artifacts/previews/status.png`, `settings.png` a `about.png` so simulovanými údajmi, otvorí/zavrie testovacie okná a overí hide/reopen/restore. `--desktop` navyše overuje `GUI_INMENUMODE`, owner HWND, zrušenie menu a callback mimo slučky. Posiela správy iba vlastným testovacím oknám. Render PNG nie je dôkaz správania na rôznych DPI monitoroch.
+`--render` vytvorí `artifacts/previews/status.png`, `settings.png`, `connect-account.png` a `about.png` so simulovanými údajmi, otvorí/zavrie testovacie okná a overí hide/reopen/restore. `--desktop` navyše overuje `GUI_INMENUMODE`, owner HWND, zrušenie menu a callback mimo slučky. Posiela správy iba vlastným testovacím oknám. Render PNG nie je dôkaz správania na rôznych DPI monitoroch.
 
 Testy používajú `FakeGitLab : HttpMessageHandler`, `FakeNotifier : IPipelineNotifier` a dočasný `StateStore(path)`. Nemajú reálny token a neposielajú toasty. DPAPI však vyžaduje skutočný používateľský profil. Výpis `PASS: N checks` ráta aj jednotlivé overenia HTTP hlavičiek, nejde o počet samostatných scenárov. Kontroluj exit code testov osobitne; úspešný nasledujúci publish nesmie zakryť ich pád.
 

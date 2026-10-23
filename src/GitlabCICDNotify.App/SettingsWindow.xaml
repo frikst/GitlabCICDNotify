@@ -1,4 +1,4 @@
-<Window x:Class="GitlabCICDNotify.App.SettingsWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:core="clr-namespace:GitlabCICDNotify.Core;assembly=GitlabCICDNotify.Core" Title="Nastavenia · GitLab CI/CD Notify" Width="760" Height="860" MinWidth="580" MinHeight="520">
+<Window x:Class="GitlabCICDNotify.App.SettingsWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:core="clr-namespace:GitlabCICDNotify.Core;assembly=GitlabCICDNotify.Core" Title="Nastavenia · GitLab CI/CD Notify" Width="760" Height="600" MinWidth="580" MinHeight="520">
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
     <TextBlock Text="NASTAVENIA" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/><TextBlock Text="Vaše GitLab účty" FontSize="28" FontWeight="SemiBold" Margin="0,6,0,8"/>
     <TextBlock Text="Pripojte ľubovoľný počet inštancií aj viac používateľov na rovnakom GitLabe." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,0,0,22"/>
@@ -15,16 +15,8 @@
         <TextBlock Text="Predvolene sledujeme spúšťajúceho používateľa. Voľba platí iba pre tento účet na tejto inštancii. Pri zmene sa sledovanie začne od aktuálneho času." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,10,0,0"/>
       </StackPanel></Border>
     </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-    <Border Style="{StaticResource Card}" Margin="0,12,0,0"><StackPanel>
-      <TextBlock Text="Pripojiť účet" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,18"/>
-      <TextBlock Text="1. Adresa inštancie" FontWeight="SemiBold" Margin="0,0,0,8"/><TextBox x:Name="InstanceBox" Text="https://gitlab.com" AutomationProperties.Name="Adresa GitLab inštancie" Margin="0,0,0,16"/>
-      <TextBlock Text="2. Vytvorte prístupový token" FontWeight="SemiBold" Margin="0,0,0,8"/>
-      <TextBlock Text="Otvorte GitLab, prihláste sa požadovaným účtom a vytvorte osobný token s oprávnením read_api. Názov a oprávnenie predvyplníme." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
-      <Button Content="Vytvoriť token v prehliadači ↗" Click="CreateToken_Click" HorizontalAlignment="Left" Margin="0,0,0,18"/>
-      <TextBlock Text="3. Vložte token a pripojte sa" FontWeight="SemiBold" Margin="0,0,0,8"/><PasswordBox x:Name="TokenBox" AutomationProperties.Name="Osobný prístupový token" Margin="0,0,0,16"/>
-      <Button x:Name="ConnectButton" Content="Overiť a pripojiť účet" Click="Connect_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left"/>
-      <TextBlock x:Name="Feedback" TextWrapping="Wrap" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite"/>
-    </StackPanel></Border>
+    <Button Content="Pripojiť účet" Click="OpenConnect_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+    <TextBlock x:Name="Feedback" TextWrapping="Wrap" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite"/>
     <TextBlock Text="Tokeny sú šifrované pre váš Windows účet. Rovnaké prihlásenie aktualizuje token existujúceho účtu. Odpojením sa token odstráni iba z tejto aplikácie." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="2,16,2,0"/>
   </StackPanel></ScrollViewer>
 </Window>

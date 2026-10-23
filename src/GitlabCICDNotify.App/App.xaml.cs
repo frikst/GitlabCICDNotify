@@ -17,6 +17,7 @@ public partial class App : Application
     private StatusWindow? _status;
     private SettingsWindow? _settings;
     private AboutWindow? _about;
+    private ConnectAccountWindow? _connectAccount;
     private bool _exiting;
     public Dashboard Dashboard { get; } = new();
     public MonitorService Monitor { get; private set; } = null!;
@@ -58,6 +59,12 @@ public partial class App : Application
         if (_settings == null) { _settings = new SettingsWindow(this); _settings.Closing += HideOnClose; }
         ShowWindow(_settings);
     }
+    public void ShowConnectAccount()
+    {
+        if (_exiting) return;
+        if (_connectAccount == null) { _connectAccount = new ConnectAccountWindow(this); _connectAccount.Closing += HideOnClose; }
+        ShowWindow(_connectAccount);
+    }
     public void ShowAbout()
     {
         if (_exiting) return;
@@ -77,7 +84,7 @@ public partial class App : Application
         _exiting = true;
         _stop.Cancel();
         try { if (_monitorTask != null) await _monitorTask; }
-        finally { _tray?.Dispose(); _http?.Dispose(); _status?.Close(); _settings?.Close(); _about?.Close(); Shutdown(); }
+        finally { _tray?.Dispose(); _http?.Dispose(); _status?.Close(); _settings?.Close(); _connectAccount?.Close(); _about?.Close(); Shutdown(); }
     }
     protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
     {

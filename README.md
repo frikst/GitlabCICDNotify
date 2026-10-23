@@ -12,7 +12,7 @@ Po spustení aplikácia zostane v systémovej oblasti (systray). Pravým kliknut
 
 ## Prvé prihlásenie
 
-1. Otvorte **Nastavenia** z tray menu.
+1. Otvorte **Nastavenia** z tray menu a zvoľte **Pripojiť účet**.
 2. Zadajte HTTPS adresu GitLabu, napr. `https://gitlab.com` alebo `https://gitlab.firma.sk/gitlab`.
 3. Kliknite na **Vytvoriť token v prehliadači**. Prihláste sa požadovaným GitLab účtom, vytvorte osobný token s oprávnením **read_api** a skopírujte ho. Názov a oprávnenie predvyplníme; na staršom GitLabe ich prípadne nastavte ručne.
 4. Vložte token a zvoľte **Overiť a pripojiť účet**. Meno sa načíta automaticky.

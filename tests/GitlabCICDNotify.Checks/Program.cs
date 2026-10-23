@@ -246,8 +246,21 @@ internal static class Program
         }
         Render(new StatusWindow(app), Path.Combine(folder, "status.png"));
         Render(new SettingsWindow(app), Path.Combine(folder, "settings.png"));
+        Render(new ConnectAccountWindow(app), Path.Combine(folder, "connect-account.png"));
         Render(new AboutWindow(), Path.Combine(folder, "about.png"));
-        Check(true, "Render status, settings and About windows");
+        Check(true, "Render status, settings, connect account and About windows");
+        app.ShowConnectAccount();
+        var connectAccount = app.Windows.OfType<ConnectAccountWindow>().Single();
+        var tokenBox = (System.Windows.Controls.PasswordBox)connectAccount.FindName("TokenBox");
+        tokenBox.Password = "synthetic-test-token";
+        connectAccount.Close();
+        Check(!connectAccount.IsVisible && tokenBox.Password.Length == 0, "Closing connect account hides window and clears token");
+        app.ShowConnectAccount();
+        Check(connectAccount.IsVisible && ReferenceEquals(connectAccount, app.Windows.OfType<ConnectAccountWindow>().Single()), "Reopening connect account reuses window");
+        connectAccount.WindowState = WindowState.Minimized;
+        app.ShowConnectAccount();
+        Check(connectAccount.WindowState == WindowState.Normal, "Opening connect account restores minimized window");
+        connectAccount.Close();
         app.ShowAbout();
         var about = app.Windows.OfType<AboutWindow>().Single();
         about.Close();

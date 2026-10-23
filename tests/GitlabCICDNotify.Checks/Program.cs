@@ -61,8 +61,12 @@ internal static class Program
         Check(handler.Requests.All(r => r.Contains("/gitlab/api/v4/")), "API respects GitLab installation subpath");
         var account = new Account
         {
-            Instance = "https://gitlab.example/gitlab/", Token = "test-token", Emails = identity.Emails,
-            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5), MonitoringMode = MonitoringMode.CommitAuthor
+            Instance = "https://gitlab.example/gitlab/",
+            Token = "test-token",
+            Emails = identity.Emails,
+            MonitoringSince = handler.Now.AddMinutes(-5),
+            Checkpoint = handler.Now.AddMinutes(-5),
+            MonitoringMode = MonitoringMode.CommitAuthor
         };
         handler.ProjectsPaginated = true;
         var scan = await api.ScanAsync(account, default);
@@ -92,8 +96,11 @@ internal static class Program
         var api = new GitLabClient(http);
         var account = new Account
         {
-            Instance = "https://gitlab.example/gitlab/", Token = "test-token", UserId = 42,
-            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5),
+            Instance = "https://gitlab.example/gitlab/",
+            Token = "test-token",
+            UserId = 42,
+            MonitoringSince = handler.Now.AddMinutes(-5),
+            Checkpoint = handler.Now.AddMinutes(-5),
             Emails = ["author@example.com"]
         };
         var initial = await api.ScanAsync(account, default);
@@ -186,8 +193,12 @@ internal static class Program
         var api = new GitLabClient(http);
         var account = new Account
         {
-            Instance = "https://gitlab.example/gitlab/", Token = "test-token", Username = "user42", UserId = 42,
-            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5)
+            Instance = "https://gitlab.example/gitlab/",
+            Token = "test-token",
+            Username = "user42",
+            UserId = 42,
+            MonitoringSince = handler.Now.AddMinutes(-5),
+            Checkpoint = handler.Now.AddMinutes(-5)
         };
         Check(account.MonitoringMode == MonitoringMode.TriggeringUser &&
             JsonSerializer.Deserialize<Account>("{}")!.MonitoringMode == MonitoringMode.TriggeringUser, "New and legacy accounts default to triggering user");
@@ -485,7 +496,14 @@ internal static class Program
 
         private object PipelineFixture(long id, string sha, DateTimeOffset time, string source, string status = "running") => new
         {
-            id, sha, source, project_id = id == 11 ? 2 : 1, @ref = "main", status, created_at = time, updated_at = time,
+            id,
+            sha,
+            source,
+            project_id = id == 11 ? 2 : 1,
+            @ref = "main",
+            status,
+            created_at = time,
+            updated_at = time,
             web_url = ReturnMaliciousUrl ? "https://attacker.example/pipeline" : $"https://gitlab.example/gitlab/team/{(id == 11 ? "second" : "project")}/-/pipelines/{id}"
         };
     }

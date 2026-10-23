@@ -24,13 +24,23 @@ public sealed record PipelineRow(Guid AccountId, Pipeline Pipeline, string Usern
     public string Time => Pipeline.CreatedAt.ToLocalTime().ToString("dd.MM. HH:mm:ss");
     public string Status => Pipeline.Status switch
     {
-        "success" => "Úspešná", "failed" => "Zlyhala", "running" => "Beží", "pending" => "Čaká",
-        "created" => "Vytvorená", "canceled" => "Zrušená", "skipped" => "Preskočená", "manual" => "Manuálny krok", "unavailable" => "Nedostupná", _ => Pipeline.Status
+        "success" => "Úspešná",
+        "failed" => "Zlyhala",
+        "running" => "Beží",
+        "pending" => "Čaká",
+        "created" => "Vytvorená",
+        "canceled" => "Zrušená",
+        "skipped" => "Preskočená",
+        "manual" => "Manuálny krok",
+        "unavailable" => "Nedostupná",
+        _ => Pipeline.Status
     };
     public Brush Color => Pipeline.Status switch
     {
-        "success" => Brushes.SeaGreen, "failed" => Brushes.IndianRed,
-        "running" or "pending" or "created" or "preparing" => Brushes.SlateBlue, _ => Brushes.SlateGray
+        "success" => Brushes.SeaGreen,
+        "failed" => Brushes.IndianRed,
+        "running" or "pending" or "created" or "preparing" => Brushes.SlateBlue,
+        _ => Brushes.SlateGray
     };
 }
 

@@ -59,8 +59,11 @@ public sealed class TrayService : NativeWindow, IDisposable
             {
                 var item = new MenuItemInfo
                 {
-                    Size = (uint)Marshal.SizeOf<MenuItemInfo>(), Mask = 0x100 | 0x40 | 0x2 | 0x1,
-                    Type = 0x100, Id = i + 1, Text = _labels[i]
+                    Size = (uint)Marshal.SizeOf<MenuItemInfo>(),
+                    Mask = 0x100 | 0x40 | 0x2 | 0x1,
+                    Type = 0x100,
+                    Id = i + 1,
+                    Text = _labels[i]
                 };
                 if (!InsertMenuItem(menu, i, true, ref item)) throw new System.ComponentModel.Win32Exception();
             }
@@ -133,11 +136,11 @@ public sealed class TrayService : NativeWindow, IDisposable
     [StructLayout(LayoutKind.Sequential)] private struct MeasureItem { public uint ControlType, ControlId, Id, Width, Height; public nuint Data; }
     [StructLayout(LayoutKind.Sequential)] private struct DrawItem { public uint ControlType, ControlId, Id, Action, State; public nint Window, Hdc; public Rect Bounds; public nuint Data; }
     [DllImport("user32.dll")] private static extern nint CreatePopupMenu();
-    [DllImport("user32.dll", EntryPoint = "InsertMenuItemW", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool InsertMenuItem(nint menu, uint position, bool byPosition, ref MenuItemInfo item);
+    [DllImport("user32.dll", EntryPoint = "InsertMenuItemW", CharSet = CharSet.Unicode, SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] private static extern bool InsertMenuItem(nint menu, uint position, bool byPosition, ref MenuItemInfo item);
     [DllImport("user32.dll")] private static extern uint TrackPopupMenuEx(nint menu, uint flags, int x, int y, nint owner, nint parameters);
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool DestroyMenu(nint menu);
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetForegroundWindow(nint window);
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetWindowPos(nint window, nint after, int x, int y, int width, int height, uint flags);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool DestroyMenu(nint menu);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetForegroundWindow(nint window);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetWindowPos(nint window, nint after, int x, int y, int width, int height, uint flags);
     [DllImport("user32.dll")] private static extern uint GetDpiForWindow(nint window);
 }

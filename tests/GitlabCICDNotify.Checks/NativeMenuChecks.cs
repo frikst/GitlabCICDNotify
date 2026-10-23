@@ -67,7 +67,8 @@ internal static class NativeMenuChecks
         check(callbackOutsideLoop, "About action executes after native menu cleanup");
     }
 
-    [StructLayout(LayoutKind.Sequential)] private struct GuiThreadInfo
+    [StructLayout(LayoutKind.Sequential)]
+    private struct GuiThreadInfo
     {
         public uint Size, Flags;
         public nint Active, Focus, Capture, MenuOwner, MoveSize, Caret;
@@ -75,9 +76,9 @@ internal static class NativeMenuChecks
     }
     private delegate bool EnumWindowsCallback(nint window, nint parameter);
     [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetGUIThreadInfo(uint thread, ref GuiThreadInfo info);
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool EndMenu();
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumThreadWindows(uint thread, EnumWindowsCallback callback, nint parameter);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetGUIThreadInfo(uint thread, ref GuiThreadInfo info);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool EndMenu();
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumThreadWindows(uint thread, EnumWindowsCallback callback, nint parameter);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(nint window, System.Text.StringBuilder text, int max);
-    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
 }

@@ -12,7 +12,7 @@ Globálne API zavedené v GitLabe 19.3 vyhľadáva pipelines spustené prihláse
 
 Podporu zisťujeme pokusom o globálny zoznam, nie požiadavkou na verziu servera. `404` zapne projektový fallback; `401`, `403` a `429` sa nesmú považovať za dôkaz staršej verzie. Projektová cache obmedzuje opakované prenosy pri fallbacku aj režime autora.
 
-Používa sa polling; WebSocket, SSE, webhook prijímač a ETag podmienené požiadavky implementované nie sú. Pri návrhu boli posúdené GraphQL subscriptions na stav už známej pipeline a webhooks vyžadujúce dostupný prijímací endpoint a nastavenie projektu. Samostatná desktop aplikácia má fungovať po prihlásení bez prevádzky servera. Podporu API na konkrétnej verzii treba pri ďalšom rozširovaní znovu overiť.
+Používa sa polling s podmienenými GET požiadavkami cez ETag tam, kde server poskytne validátor. ETag sa posiela len pre tú istú URL vrátane parametrov; meniaci sa checkpoint preto obmedzuje jeho využitie v zoznamoch pipelines. Stabilné URL detailov aktívnych pipelines a commitov a obnova projektov po uplynutí 10-minútovej cache môžu opakovane využiť 304. Telo a stránkovacie hlavičky zostávajú len v ohraničenej pamäťovej cache; 304 sa spracuje rovnako ako pôvodné údaje a nenahrádza kontrolu aktívnych pipelines ani neposúva checkpoint samostatne. Bez ETag sa pokračuje bežným GET. Podpora závisí od endpointu, verzie a konfigurácie GitLabu; klient ju nepredpokladá plošne. WebSocket, SSE a webhook prijímač implementované nie sú. Pri návrhu boli posúdené GraphQL subscriptions na stav už známej pipeline a webhooks vyžadujúce dostupný prijímací endpoint a nastavenie projektu. Samostatná desktop aplikácia má fungovať po prihlásení bez prevádzky servera. Podporu API na konkrétnej verzii treba pri ďalšom rozširovaní znovu overiť.
 
 ## Autentifikácia bez registrácie integrácie
 
@@ -34,5 +34,5 @@ Windows toast používa `CommunityToolkit.WinUI.Notifications` 7.1.2. Protocol a
 
 ## Referencie pri rozširovaní
 
-- GitLab: [Pipelines API](https://docs.gitlab.com/api/pipelines/), [Commits API](https://docs.gitlab.com/api/commits/), [osobné tokeny a predvyplnenie formulára](https://docs.gitlab.com/user/profile/personal_access_tokens/).
+- GitLab: [ETag polling](https://docs.gitlab.com/development/polling/), [Pipelines API](https://docs.gitlab.com/api/pipelines/), [Commits API](https://docs.gitlab.com/api/commits/), [osobné tokeny a predvyplnenie formulára](https://docs.gitlab.com/user/profile/personal_access_tokens/).
 - Windows: [ToastNotificationManagerCompat](https://learn.microsoft.com/en-us/dotnet/api/communitytoolkit.winui.notifications.toastnotificationmanagercompat), [TrackPopupMenuEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackpopupmenuex).

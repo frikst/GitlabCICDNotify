@@ -4,7 +4,7 @@
 
 - .NET 10 WPF aplikácia štartujúca do tray; štyri položky menu vrátane dialógu O aplikácii s verziou, autorom a organizáciou, dvojklik na stav, skrytie a obnovenie existujúcich okien, explicitné ukončenie a obsluha ukončenia Windows relácie.
 - Viac účtov/inštancií cez osobné tokeny v samostatnom okne **Pripojiť účet**, ktoré sa otvára z nastavení. Režim je samostatný pre používateľa + inštanciu; nový účet má `TriggeringUser`, obnovenie tokenu zachová jeho voľbu.
-- Globálna stratégia, projektový fallback, režim autora, stránkovanie, cache projektov, kontrolné body, retry, aktívne pipelines a perzistentná deduplikácia.
+- Globálna stratégia, projektový fallback, režim autora, stránkovanie, cache projektov, podmienené GET cez ETag s obnovením tela a stránkovania pri 304, kontrolné body, retry, aktívne pipelines a perzistentná deduplikácia.
 - Toast s URL akciou, farebný prehľad posledných 100 pipelines relácie a predvolene zbalené logy (200 správ v pamäti).
 - DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render všetkých štyroch okien a natívne desktop kontroly. Lokálny publish adresár.
 - GitHub Actions release workflow pre tagy `vX.Y.Z`: self-contained Windows x64 ZIP, MSI cez WiX a release poznámky zo sekcie verzie v changelogu. Bez spúšťania kontrolného programu a bez dočasných Actions artefaktov.
@@ -18,9 +18,11 @@
 - Prehľad/logy sa neukladajú ako kompletná história. `Notified` naopak rastie bez retencie. Toast a zápis jeho ID nie sú jedna transakcia; po páde je možné opakovanie.
 - Obnovenie prihlásenia aktualizuje token a e-maily, zatiaľ nie uložený `Username`/`Name`; premenovanie používateľa môže ovplyvniť projektový filter `username`.
 - Jeden koordinátor serializuje scany aj zmeny účtov; rozsiahly/pomalý scan môže odložiť zápis nastavení. Nie je implementovaný single-instance zámok ani koordinácia zápisov viacerých procesov.
-- Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, autostart, aktualizácie aplikácie, ETag, WebSocket/SSE a webhook prijímač nie sú implementované.
+- Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, autostart, aktualizácie aplikácie, WebSocket/SSE a webhook prijímač nie sú implementované.
 
 ## Overenie a zostávajúce živé kontroly
+
+Pri doplnení ETag prešli Release build bez upozornení a simulované HTTP/state kontroly: 304 pre kurzorové aj projektové stránkovanie a detaily, zmena stavu, izolácia URL/účtov/tokenov, invalidácia účtu, chyby oprávnení, odpovede bez ETag, no-store a živé overovanie pri prihlásení. ETag komunikácia so skutočnou inštanciou GitLabu zostáva neoverená.
 
 Pri doplnení release workflow prešli lokálny self-contained publish `win-x64`, vytvorenie ZIP, zostavenie MSI vrátane WiX/ICE validácie bez upozornení a náhľad extrakcie jednej verzie z changelogu. Unit testy v projekte nie sú; existujúci konzolový kontrolný program sa pri tejto zmene nespúšťal. Beh workflow na GitHube, publikovanie release, živá MSI inštalácia, upgrade a odinštalovanie zostávajú neoverené.
 

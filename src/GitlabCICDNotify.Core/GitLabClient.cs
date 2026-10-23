@@ -15,15 +15,16 @@ public sealed class GitLabApiException(string message, HttpStatusCode status, Ti
 public sealed class GitLabClient(HttpClient http)
 {
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+    private readonly ConditionalGetCache _responses = new();
     private readonly HashSet<string> _globalUnsupported = [];
     private readonly Dictionary<Guid, (DateTimeOffset Expires, List<ProjectDto> Projects)> _projects = [];
 
-    private async Task<HttpResponseMessage> SendAsync(Account account, string path, CancellationToken ct)
+    private async Task<HttpResponseMessage> SendAsync(Account account, string path, CancellationToken ct, bool cache = true)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(InstanceUrl.Parse(account.Instance), "api/v4/" + path));
         request.Headers.Add("PRIVATE-TOKEN", account.Token);
         request.Headers.UserAgent.ParseAdd("GitlabCICDNotify/1.0");
-        var response = await http.SendAsync(request, ct);
+        var response = cache ? await _responses.SendAsync(http, request, account.Id, account.UserId, ct) : await http.SendAsync(request, ct);
         if (response.IsSuccessStatusCode) return response;
         var status = response.StatusCode;
         var delay = response.Headers.RetryAfter?.Delta ??
@@ -38,19 +39,19 @@ public sealed class GitLabClient(HttpClient http)
         }, status, delay);
     }
 
-    private async Task<T> GetAsync<T>(Account account, string path, CancellationToken ct)
+    private async Task<T> GetAsync<T>(Account account, string path, CancellationToken ct, bool cache = true)
     {
-        using var response = await SendAsync(account, path, ct);
+        using var response = await SendAsync(account, path, ct, cache);
         return await response.Content.ReadFromJsonAsync<T>(Json, ct) ?? throw new JsonException("Prázdna odpoveď GitLab API.");
     }
 
-    private async Task<List<T>> PagesAsync<T>(Account account, string path, CancellationToken ct)
+    private async Task<List<T>> PagesAsync<T>(Account account, string path, CancellationToken ct, bool cache = true)
     {
         List<T> result = [];
         var page = 1;
         while (true)
         {
-            using var response = await SendAsync(account, $"{path}{(path.Contains('?') ? '&' : '?')}per_page=100&page={page}", ct);
+            using var response = await SendAsync(account, $"{path}{(path.Contains('?') ? '&' : '?')}per_page=100&page={page}", ct, cache);
             var batch = await response.Content.ReadFromJsonAsync<List<T>>(Json, ct) ?? [];
             result.AddRange(batch);
             if (response.Headers.TryGetValues("X-Next-Page", out var values))
@@ -70,9 +71,9 @@ public sealed class GitLabClient(HttpClient http)
     {
         var account = new Account { Instance = InstanceUrl.Parse(instance).AbsoluteUri, Token = token.Trim() };
         if (account.Token.Length == 0) throw new ArgumentException("Vložte osobný prístupový token.");
-        var user = await GetAsync<UserDto>(account, "user", ct);
-        var emails = await PagesAsync<EmailDto>(account, "user/emails", ct);
-        using var permissionCheck = await SendAsync(account, "projects?membership=true&per_page=1", ct);
+        var user = await GetAsync<UserDto>(account, "user", ct, cache: false);
+        var emails = await PagesAsync<EmailDto>(account, "user/emails", ct, cache: false);
+        using var permissionCheck = await SendAsync(account, "projects?membership=true&per_page=1", ct, cache: false);
         var addresses = emails.Where(e => e.ConfirmedAt != null).Select(e => e.Email)
             .Concat(new[] { user.Email, user.CommitEmail }).Where(e => !string.IsNullOrWhiteSpace(e))
             .Select(e => e!).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -155,7 +156,11 @@ public sealed class GitLabClient(HttpClient http)
         return projects;
     }
 
-    public void InvalidateAccount(Guid id) => _projects.Remove(id);
+    public void InvalidateAccount(Guid id)
+    {
+        _projects.Remove(id);
+        _responses.InvalidateAccount(id);
+    }
 
     private static Pipeline ToPipeline(Account account, PipelineDto p, long projectId, string? project)
     {

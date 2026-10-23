@@ -23,6 +23,7 @@ internal static class Program
             CheckNotification();
             ApiChecks().GetAwaiter().GetResult();
             TriggeringUserChecks().GetAwaiter().GetResult();
+            ETagChecks().GetAwaiter().GetResult();
             MonitorChecks().GetAwaiter().GetResult();
             if (args.Contains("--render") || args.Contains("--desktop")) RenderWindows(args.Contains("--desktop"));
             Console.WriteLine($"PASS: {_passed} checks");
@@ -84,6 +85,100 @@ internal static class Program
         catch (OperationCanceledException) { Check(true, "Cancel requests during shutdown"); }
     }
 
+    private static async Task ETagChecks()
+    {
+        using var handler = new FakeGitLab { EnableETags = true, GlobalPagination = true };
+        using var http = new HttpClient(handler);
+        var api = new GitLabClient(http);
+        var account = new Account
+        {
+            Instance = "https://gitlab.example/gitlab/", Token = "test-token", UserId = 42,
+            MonitoringSince = handler.Now.AddMinutes(-5), Checkpoint = handler.Now.AddMinutes(-5),
+            Emails = ["author@example.com"]
+        };
+        var initial = await api.ScanAsync(account, default);
+        var count = handler.NotModifiedCount;
+        var repeated = await api.ScanAsync(account, default);
+        Check(handler.NotModifiedCount == count + 2 && repeated.Pipelines.SequenceEqual(initial.Pipelines),
+            "ETag 304 restores global response bodies and cursor pagination");
+        Check(handler.Validators.Take(2).All(v => v == null) && handler.Validators.Skip(2).All(v => v!.StartsWith("W/")),
+            "First GET is unconditional and subsequent GET preserves weak ETag");
+        account.Checkpoint = account.Checkpoint.AddSeconds(30);
+        var before = handler.Validators.Count;
+        await api.ScanAsync(account, default);
+        Check(handler.Validators[before] == null, "Changed query gets no validator from another URL");
+
+        // Same local ID must still be isolated by credentials, user and origin.
+        handler.GlobalPagination = false;
+        foreach (var change in new Action[]
+        {
+            () => account.Token = "replacement-test-token",
+            () => account.UserId = 43,
+            () => account.Instance = "https://gitlab.example/another/",
+            () => account.Id = Guid.NewGuid()
+        })
+        {
+            change();
+            before = handler.Validators.Count;
+            await api.ScanAsync(account, default);
+            Check(handler.Validators[before] == null, "ETag scope isolates credentials, identity, origin and account");
+        }
+        api.InvalidateAccount(account.Id);
+        before = handler.Validators.Count;
+        await api.ScanAsync(account, default);
+        Check(handler.Validators[before] == null, "Account invalidation clears ETag representations");
+
+        account.ActivePipelines = initial.Pipelines.ToList();
+        handler.OmitGlobalPipelines = true;
+        await api.ScanAsync(account, default);
+        count = handler.NotModifiedCount;
+        repeated = await api.ScanAsync(account, default);
+        Check(handler.NotModifiedCount == count + 3 && repeated.Pipelines.All(p => p.Status == "running"),
+            "Active pipeline details reuse bodies on 304");
+        handler.ActiveStatus = "success";
+        repeated = await api.ScanAsync(account, default);
+        Check(repeated.Pipelines.All(p => p.Status == "success"), "Changed ETag replaces cached pipeline status");
+
+        handler.Failure = HttpStatusCode.Unauthorized;
+        try { await api.ScanAsync(account, default); throw new Exception("Expected unauthorized"); }
+        catch (GitLabApiException ex) { Check(ex.Status == HttpStatusCode.Unauthorized, "ETag never hides authorization failure"); }
+        handler.Failure = null;
+        before = handler.Validators.Count;
+        await api.ScanAsync(account, default);
+        Check(handler.Validators[before] == null, "HTTP error invalidates the previous validator");
+        handler.EnableETags = false;
+        await api.ScanAsync(account, default);
+        before = handler.Validators.Count;
+        await api.ScanAsync(account, default);
+        Check(handler.Validators.Skip(before).All(v => v == null), "200 without ETag removes old validators");
+
+        handler.EnableETags = true;
+        handler.NoStore = true;
+        await api.ScanAsync(account, default);
+        before = handler.Validators.Count;
+        await api.ScanAsync(account, default);
+        Check(handler.Validators.Skip(before).All(v => v == null), "No-store responses are never cached");
+        handler.NoStore = false;
+        handler.ForceNotModified = true;
+        try { await api.ScanAsync(account, default); throw new Exception("Expected unsolicited 304 rejection"); }
+        catch (GitLabApiException ex) { Check(ex.Status == HttpStatusCode.NotModified, "Reject 304 without cached body"); }
+        handler.ForceNotModified = false;
+
+        account.ActivePipelines = [];
+        account.Instance = "https://gitlab.example/gitlab/";
+        account.MonitoringMode = MonitoringMode.CommitAuthor;
+        handler.PipelinePagination = true;
+        initial = await api.ScanAsync(account, default);
+        count = handler.NotModifiedCount;
+        repeated = await api.ScanAsync(account, default);
+        Check(handler.NotModifiedCount > count && repeated.Pipelines.SequenceEqual(initial.Pipelines),
+            "Project pipeline pages, X-Next-Page and commit details support ETag");
+
+        before = handler.Validators.Count;
+        await api.AuthenticateAsync(account.Instance, account.Token, default);
+        await api.AuthenticateAsync(account.Instance, account.Token, default);
+        Check(handler.Validators.Skip(before).All(v => v == null), "Authentication always verifies live identity and permissions");
+    }
     private static async Task TriggeringUserChecks()
     {
         using var handler = new FakeGitLab { GlobalPagination = true };
@@ -304,6 +399,12 @@ internal static class Program
         public long UserId { get; set; } = 42;
         public List<string> Requests { get; } = [];
         public HttpStatusCode? Failure { get; set; }
+        public bool EnableETags { get; set; }
+        public bool NoStore { get; set; }
+        public bool ForceNotModified { get; set; }
+        public bool PipelinePagination { get; set; }
+        public int NotModifiedCount { get; private set; }
+        public List<string?> Validators { get; } = [];
         public bool ProjectsPaginated { get; set; }
         public bool ReturnMaliciousUrl { get; set; }
         public bool GlobalPagination { get; set; }
@@ -318,6 +419,7 @@ internal static class Program
             Check(request.Headers.Contains("PRIVATE-TOKEN"), "Authenticate every API request");
             var url = request.RequestUri!.AbsoluteUri;
             Requests.Add(url);
+            Validators.Add(request.Headers.IfNoneMatch.FirstOrDefault()?.ToString());
             if (Failure is { } failure)
             {
                 var error = new HttpResponseMessage(failure);
@@ -351,6 +453,7 @@ internal static class Program
             else if (path.EndsWith("/pipelines"))
             {
                 var mr = url.Contains("source=merge_request_event");
+                if (PipelinePagination) next = url.Contains("page=2") ? "" : "2";
                 data = path.Contains("/projects/2/") ? Array.Empty<object>() : new object[]
                 {
                     PipelineFixture(mr ? 11 : 10, "own", Now, mr ? "merge_request_event" : "push"),
@@ -363,6 +466,20 @@ internal static class Program
             var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json") };
             if (next != null) response.Headers.TryAddWithoutValidation("X-Next-Page", next);
             if (linkNext != null) response.Headers.TryAddWithoutValidation("Link", $"<{linkNext}>; rel=\"next\"");
+            if (NoStore) response.Headers.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoStore = true };
+            if (EnableETags)
+            {
+                var digest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(data))));
+                response.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"" + digest + "\"", isWeak: true);
+                if (ForceNotModified || request.Headers.IfNoneMatch.Any(v => v.ToString() == response.Headers.ETag.ToString()))
+                {
+                    NotModifiedCount++;
+                    var unchanged = new HttpResponseMessage(HttpStatusCode.NotModified);
+                    unchanged.Headers.ETag = response.Headers.ETag;
+                    response.Dispose();
+                    return Task.FromResult(unchanged);
+                }
+            }
             return Task.FromResult(response);
         }
 

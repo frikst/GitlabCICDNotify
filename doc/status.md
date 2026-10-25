@@ -5,8 +5,9 @@
 - .NET 10 WPF aplikácia štartujúca do tray; štyri položky menu vrátane dialógu O aplikácii s verziou, autorom a organizáciou, dvojklik na stav, skrytie a obnovenie existujúcich okien, explicitné ukončenie a obsluha ukončenia Windows relácie.
 - Viac účtov/inštancií cez osobné tokeny v samostatnom okne **Pripojiť účet**, ktoré sa otvára z nastavení. Režim je samostatný pre používateľa + inštanciu; nový účet má `TriggeringUser`, obnovenie tokenu zachová jeho voľbu.
 - Globálna stratégia, projektový fallback, režim autora, stránkovanie, cache projektov, podmienené GET cez ETag s obnovením tela a stránkovania pri 304, kontrolné body, retry, aktívne pipelines a perzistentná deduplikácia.
-- Toast s URL akciou, farebný prehľad posledných 100 pipelines relácie a predvolene zbalené logy (200 správ v pamäti).
-- DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render všetkých štyroch okien a natívne desktop kontroly. Lokálny publish adresár.
+- Toast s URL akciou aj akciou **Zobraziť** na otvorenie WPF priebehu pipeline; rovnaká akcia je v okne Stav. Priebeh obsahuje stage/job strom vrátane trigger jobov, stavové ikony a živý read-only terminál s výberom a kopírovaním. Polling iba pre meniteľné stavy a vybraný log, Range/ETag s fallbackom, finálny odber, backoff, zrušenie pri skrytí a obnovenie okna.
+- Farebný prehľad posledných 100 pipelines relácie a predvolene zbalené logy (200 správ v pamäti).
+- DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render všetkých piatich okien a natívne desktop kontroly. Lokálny publish adresár.
 - GitHub Actions release workflow pre tagy `vX.Y.Z`: self-contained Windows x64 ZIP, MSI cez WiX a release poznámky zo sekcie verzie v changelogu. Bez spúšťania kontrolného programu a bez dočasných Actions artefaktov.
 
 ## Známe hranice
@@ -21,6 +22,8 @@
 - Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, autostart, aktualizácie aplikácie, WebSocket/SSE a webhook prijímač nie sú implementované.
 
 ## Overenie a zostávajúce živé kontroly
+
+Pri doplnení priebehu pipeline prešli Release build bez upozornení a 237 kontrol vrátane HTTP/state fixture, toast XML, renderu piatich okien, výberu jobu a rušenia/obnovenia živého cyklu bez súbehu. Náhľady priebehu a Stav boli vizuálne skontrolované. Range/ETag trace na reálnom GitLabe a živá Windows foreground aktivácia cez **Zobraziť** (vrátane štartu ukončenej aplikácie) zostávajú neoverené. GitLab nemusí podporovať Range ani ETag na trace; vtedy sa počas behu prenáša celý log. Terminál uchováva koniec logu do 2 Mi znakov, najviac osem jobov na okno; logy sa neukladajú na disk.
 
 Pri doplnení ETag prešli Release build bez upozornení a simulované HTTP/state kontroly: 304 pre kurzorové aj projektové stránkovanie a detaily, zmena stavu, izolácia URL/účtov/tokenov, invalidácia účtu, chyby oprávnení, odpovede bez ETag, no-store a živé overovanie pri prihlásení. ETag komunikácia so skutočnou inštanciou GitLabu zostáva neoverená.
 

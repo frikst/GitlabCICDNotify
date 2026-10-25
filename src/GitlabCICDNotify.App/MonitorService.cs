@@ -17,6 +17,8 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
     private readonly Dictionary<Guid, (int Failures, DateTimeOffset Retry)> _retries = [];
     private bool _storageHealthy = true;
 
+    public Account? FindAccount(Guid id) => _accounts.FirstOrDefault(a => a.Id == id);
+
     public async Task InitializeAsync(CancellationToken ct)
     {
         try

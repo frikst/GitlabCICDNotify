@@ -17,6 +17,11 @@ public partial class StatusWindow : Window
         catch (OperationCanceledException) { }
         finally { button.IsEnabled = true; }
     }
+    private void ShowPipeline_Click(object sender, RoutedEventArgs e)
+    {
+        if (((Button)sender).Tag is PipelineRow row)
+            _app.ShowPipeline(row.AccountId, row.Pipeline.ProjectId, row.Pipeline.Id);
+    }
     private void Pipeline_Click(object sender, RoutedEventArgs e)
     {
         if (((Button)sender).Tag is not PipelineRow row) return;

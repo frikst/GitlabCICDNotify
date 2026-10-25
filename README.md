@@ -1,6 +1,6 @@
 # GitLab CI/CD Notify
 
-Windows aplikácia v .NET 10 + WPF, ktorá na pozadí sleduje GitLab pipelines a zobrazuje Windows notifikácie s tlačidlom **Otvoriť pipeline**.
+Windows aplikácia v .NET 10 + WPF, ktorá na pozadí sleduje GitLab pipelines a zobrazuje Windows notifikácie s akciami **Zobraziť** a **Otvoriť pipeline**.
 
 ## Spustenie
 
@@ -28,9 +28,17 @@ Pri každom účte v **Nastaveniach → Sledovanie účtu** vyberte režim a stl
 
 Voľba platí iba pre daného používateľa na danej inštancii. Pri zmene režimu sa sledovanie tohto účtu začne od aktuálneho času a jeho prehľad sa vyčistí. Nové prihlásenie tiež neoznamuje starú históriu.
 
-Kontrola prebieha každých 30 sekúnd, pri chybe sa interval predĺži. Stavové okno zobrazuje posledných 100 zachytených pipelines relácie, farebné stavy a zbalené diagnostické logy. Klik na stav pipeline aj telo/tlačidlo notifikácie otvorí prehliadač. Windows notifikácie musia byť povolené; režim Nerušiť môže potlačiť banner.
+Kontrola prebieha každých 30 sekúnd, pri chybe sa interval predĺži. Stavové okno zobrazuje posledných 100 zachytených pipelines relácie, farebné stavy a zbalené diagnostické logy. Akcia **Zobraziť** v riadku pipeline aj v notifikácii otvorí priebeh priamo v aplikácii. Klik na stav pipeline, telo notifikácie alebo **Otvoriť pipeline** otvorí prehliadač. Windows notifikácie musia byť povolené; režim Nerušiť môže potlačiť banner.
 
 Po reštarte sa sledovanie obnoví, ale globálny zoznam obsahuje iba nedávne pipelines a nezaručuje kompletnú históriu po dlhom vypnutí. Neskorší retry už ukončenej pipeline sa v globálnom režime nemusí zachytiť. Režim autora nevyhodnocuje všetky commity pushu ani autorstvo syntetických merge commitov. Podrobné [hranice implementácie](doc/status.md) sú v dokumentácii.
+
+## Priebeh pipeline
+
+Vľavo je rozbaliteľný zoznam **stage → job** s ikonami a farbami aktuálneho stavu. Výber jobu zobrazí jeho živý výstup v čiernom termináli s písmom Consolas. Text môžete označiť a kopírovať (`Ctrl+C`, `Ctrl+A`); terminál neprijíma príkazy. Ak chcete čítať starší výstup, vypnite **Sledovať výstup**. Trigger joby nadväzujúcich pipelines sú v zozname, ale nemajú vlastný log.
+
+Načítava sa iba log vybraného jobu, počas behu každé dve sekundy. Stav pipeline a jobov sa kontroluje približne každých šesť sekúnd, pri manuálnej pipeline každých 30 sekúnd. Klient žiada nové bajty logu cez HTTP Range a využíva ETag, ak ich server podporuje. Ak server Range ignoruje, spracuje celý log bez zdvojenia textu. Po dokončení sa automatické požiadavky zastavia; **Obnoviť** umožňuje zistiť neskorší retry. Manuálne a čakajúce kroky zostávajú sledované, lebo sa ešte môžu spustiť.
+
+Zatvorenie okno skryje a zastaví jeho požiadavky. Opätovné otvorenie tej istej pipeline obnoví okno aj sledovanie. Logy sa neukladajú na disk; terminál uchováva najviac posledné dva milióny znakov a cache najviac osem jobov v každom okne. Pri prekročení limitu je v termináli upozornenie; celý log je dostupný v GitLabe.
 
 ## Údaje a riešenie problémov
 

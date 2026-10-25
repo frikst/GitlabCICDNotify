@@ -12,20 +12,21 @@ public sealed class GitLabApiException(string message, HttpStatusCode status, Ti
     public TimeSpan? RetryAfter { get; } = retryAfter;
 }
 
-public sealed class GitLabClient(HttpClient http)
+public sealed partial class GitLabClient(HttpClient http)
 {
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     private readonly ConditionalGetCache _responses = new();
     private readonly HashSet<string> _globalUnsupported = [];
     private readonly Dictionary<Guid, (DateTimeOffset Expires, List<ProjectDto> Projects)> _projects = [];
 
-    private async Task<HttpResponseMessage> SendAsync(Account account, string path, CancellationToken ct, bool cache = true)
+    private async Task<HttpResponseMessage> SendAsync(Account account, string path, CancellationToken ct, bool cache = true, Action<HttpRequestMessage>? configure = null, bool trace = false)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(InstanceUrl.Parse(account.Instance), "api/v4/" + path));
         request.Headers.Add("PRIVATE-TOKEN", account.Token);
         request.Headers.UserAgent.ParseAdd("GitlabCICDNotify/1.0");
+        configure?.Invoke(request);
         var response = cache ? await _responses.SendAsync(http, request, account.Id, account.UserId, ct) : await http.SendAsync(request, ct);
-        if (response.IsSuccessStatusCode) return response;
+        if (response.IsSuccessStatusCode || trace && response.StatusCode is HttpStatusCode.NotModified or HttpStatusCode.NotFound or HttpStatusCode.RequestedRangeNotSatisfiable) return response;
         var status = response.StatusCode;
         var delay = response.Headers.RetryAfter?.Delta ??
             (response.Headers.RetryAfter?.Date is { } date ? date - DateTimeOffset.UtcNow : (TimeSpan?)null);

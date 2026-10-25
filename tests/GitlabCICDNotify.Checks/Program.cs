@@ -11,7 +11,7 @@ using GitlabCICDNotify.Core;
 
 namespace GitlabCICDNotify.Checks;
 
-internal static class Program
+internal static partial class Program
 {
     private static int _passed;
     [STAThread]
@@ -25,6 +25,7 @@ internal static class Program
             TriggeringUserChecks().GetAwaiter().GetResult();
             ETagChecks().GetAwaiter().GetResult();
             MonitorChecks().GetAwaiter().GetResult();
+            ProgressChecks().GetAwaiter().GetResult();
             if (args.Contains("--render") || args.Contains("--desktop")) RenderWindows(args.Contains("--desktop"));
             Console.WriteLine($"PASS: {_passed} checks");
             return 0;
@@ -235,7 +236,10 @@ internal static class Program
         var pipeline = new Pipeline(10, 1, "group/project", "main", "abc", "running", "https://gitlab.example/group/project/-/pipelines/10", "push", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
         var content = NotificationService.Build(account, pipeline).GetToastContent().GetContent();
         var xml = System.Xml.Linq.XDocument.Parse(content);
-        var action = xml.Descendants("action").Single();
+        var action = xml.Descendants("action").Single(a => a.Attribute("content")?.Value == "Otvoriť pipeline");
+        var show = xml.Descendants("action").Single(a => a.Attribute("content")?.Value == "Zobraziť");
+        var target = CommunityToolkit.WinUI.Notifications.ToastArguments.Parse(show.Attribute("arguments")!.Value);
+        Check((show.Attribute("activationType")?.Value ?? "foreground") == "foreground" && target["account"] == account.Id.ToString("D") && target["project"] == "1" && target["pipeline"] == "10", "Show notification action activates app with stable account and numeric pipeline identity");
         Check(action.Attribute("activationType")?.Value == "protocol" && action.Attribute("arguments")?.Value == pipeline.Url,
             "Windows notification action opens the exact pipeline URL via protocol activation");
         Check(xml.Root?.Attribute("activationType")?.Value == "protocol" && !content.Contains(account.Token),
@@ -350,6 +354,7 @@ internal static class Program
             app.Dashboard.Pipelines.Add(new PipelineRow(accountId, new Pipeline(item.Item1, 1, "team / deployment-service", item.Item3, "a7b648debaae", item.Item2,
                 "https://gitlab.example.com/team/project/-/pipelines/" + item.Item1, "push", DateTimeOffset.Now, DateTimeOffset.Now), "jan.novak", "https://gitlab.example.com/"));
         }
+        RenderProgress(folder);
         Render(new StatusWindow(app), Path.Combine(folder, "status.png"));
         Render(new SettingsWindow(app), Path.Combine(folder, "settings.png"));
         Render(new ConnectAccountWindow(app), Path.Combine(folder, "connect-account.png"));

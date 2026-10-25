@@ -22,6 +22,7 @@ public sealed class NotificationService : IPipelineNotifier
             .AddText($"{pipeline.Project} · {pipeline.Ref}")
             .AddText($"@{account.Username} · #{pipeline.Id} · {pipeline.Status}")
             .SetProtocolActivation(new Uri(pipeline.Url))
+            .AddButton(new ToastButton().SetContent("Zobraziť").AddArgument("action", "show").AddArgument("account", account.Id.ToString("D")).AddArgument("project", pipeline.ProjectId.ToString(System.Globalization.CultureInfo.InvariantCulture)).AddArgument("pipeline", pipeline.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)))
             .AddButton(new ToastButton().SetContent("Otvoriť pipeline").SetProtocolActivation(new Uri(pipeline.Url)));
     }
 

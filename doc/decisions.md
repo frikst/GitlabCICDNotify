@@ -30,9 +30,9 @@ Oznámené ID sa ukladajú po odoslaní toastu. Deduplikácia pokrýva opakovan�
 
 WinForms `NotifyIcon` zabezpečuje ikonu, natívny HMENU skutočnú Windows menu slučku aj pri skrytých WPF oknách. WPF popup ani `ContextMenuStrip` nie sú produkčným tray menu. Trvalý owner a odložená akcia po skončení menu chránia otvorenie okna a ukončenie aplikácie pred reentranciou.
 
-Windows toast používa `CommunityToolkit.WinUI.Notifications` 7.1.2. Protocol activation necháva otvorenie URL na shelli a predvolenom prehliadači; aplikácia nemusí bežať pri kliknutí. UI používa spoločné XAML resources, binding, code-behind a ručne zostavené služby; nebol zavedený MVVM/DI framework.
+Windows toast používa `CommunityToolkit.WinUI.Notifications` 7.1.2. Protocol activation necháva otvorenie URL na shelli a predvolenom prehliadači; aplikácia nemusí bežať pri kliknutí. Nová akcia **Zobraziť** používa foreground aktiváciu aplikácie s identitou pipeline; callback po načítaní účtov otvorí WPF priebeh na UI vlákne. Neprenáša token ani nedôveryhodnú URL. UI používa spoločné XAML resources, binding, code-behind a ručne zostavené služby; nebol zavedený MVVM/DI framework.
 
 ## Referencie pri rozširovaní
 
-- GitLab: [ETag polling](https://docs.gitlab.com/development/polling/), [Pipelines API](https://docs.gitlab.com/api/pipelines/), [Commits API](https://docs.gitlab.com/api/commits/), [osobné tokeny a predvyplnenie formulára](https://docs.gitlab.com/user/profile/personal_access_tokens/).
+- GitLab: [ETag polling](https://docs.gitlab.com/development/polling/), [Pipelines API](https://docs.gitlab.com/api/pipelines/), [Commits API](https://docs.gitlab.com/api/commits/), [Jobs API vrátane trace a bridges](https://docs.gitlab.com/api/jobs/), [osobné tokeny a predvyplnenie formulára](https://docs.gitlab.com/user/profile/personal_access_tokens/).
 - Windows: [ToastNotificationManagerCompat](https://learn.microsoft.com/en-us/dotnet/api/communitytoolkit.winui.notifications.toastnotificationmanagercompat), [TrackPopupMenuEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackpopupmenuex).

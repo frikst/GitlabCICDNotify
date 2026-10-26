@@ -37,6 +37,10 @@ WPF má `OnExplicitShutdown`; okná sa vytvárajú lazily, opakovane používaj�
 
 Tray používa trvalé skryté top-level HWND, owner-drawn HMENU a `TrackPopupMenuEx`. Pred otvorením presunie owner k monitoru kotvy a zistí DPI, potom meria aj kreslí. Po slučke zničí HMENU, odošle `WM_NULL` a až potom vykoná príkaz. Manifest deklaruje PerMonitorV2. Toast telo a tlačidlo **Otvoriť pipeline** používajú HTTPS protocol activation. **Zobraziť** používa foreground aktiváciu cez `ToastNotificationManagerCompat.OnActivated`; prenáša iba lokálne GUID účtu a číselné ID projektu/pipeline. Callback sa presunie na dispatcher a počká na načítanie účtov. Okno sa vyhľadáva podľa trojice účet/projekt/pipeline; chýbajúci účet otvorí nastavenia.
 
+## Automatické spúšťanie
+
+`StartupService` pri štarte zosúladí hodnotu `GitlabCICDNotify` v `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` s voľbou `StartWithWindows` (DWORD) v `HKCU\Software\GitlabCICDNotify`. Chýbajúca voľba znamená zapnuté. Príkaz obsahuje cestu k EXE v úvodzovkách bez diagnostických parametrov; pri ručnom spustení z nového umiestnenia sa cesta obnoví. Vypnutie odstráni iba vlastnú Run hodnotu a uloží opt-out, ktorý sa pri ďalšom spustení zachová. Nastavenie je nezávislé od účtov a ich DPAPI súboru. Chyba registrácie sa zaloguje a neblokuje sledovanie; chyba zmeny v UI vráti checkbox do predchádzajúceho stavu. MSI túto používateľskú registráciu nespravuje; pred odinštalovaním možno autostart vypnúť v aplikácii.
+
 ## Priebeh pipeline
 
 `PipelineProgress` v Core drží snapshot detailu pipeline, stránkované jobs aj bridges a najviac osem logov vybraných jobov. `PipelineWindow` riadi jeden sekvenčný asynchrónny cyklus iba počas viditeľnosti. Metadata sa obnovujú najskôr po 6 s (manuálna pipeline 30 s), vybraný log po 2 s. Dokončená pipeline bez neukončených jobov prestane vyvolávať metadata GET; dokončený job má jeden finálny odber logu. Ak server pošle len časť rozsahu, načítavanie pokračuje po koniec. Chýbajúci finálny log má najviac tri pokusy. Čakajúce joby bez začiatku a bridges nevyvolávajú trace GET.

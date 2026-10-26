@@ -2,6 +2,10 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
     <TextBlock Text="NASTAVENIA" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/><TextBlock Text="Vaše GitLab účty" FontSize="28" FontWeight="SemiBold" Margin="0,6,0,8"/>
     <TextBlock Text="Pripojte ľubovoľný počet inštancií aj viac používateľov na rovnakom GitLabe." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,0,0,22"/>
+    <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,18"><StackPanel>
+      <CheckBox x:Name="StartWithWindows" Content="Spúšťať pri prihlásení do Windows" Click="Startup_Click" VerticalContentAlignment="Center"/>
+      <TextBlock Text="Predvolene zapnuté. Zrušením zaškrtnutia vypnete automatické spúšťanie pre váš Windows účet. Zmena sa uloží ihneď." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+    </StackPanel></Border>
     <ItemsControl ItemsSource="{Binding AccountSettings}"><ItemsControl.ItemTemplate><DataTemplate>
       <Border Style="{StaticResource Card}" Padding="16" Margin="0,4,0,10"><StackPanel>
         <DockPanel Margin="0,0,0,14"><Button DockPanel.Dock="Right" Content="Odpojiť" Click="Remove_Click" Tag="{Binding Id}" Padding="12,6" Margin="12,0,0,0" VerticalAlignment="Center"/><StackPanel><TextBlock Text="{Binding Username, StringFormat=@{0}}" FontWeight="SemiBold"/><TextBlock Text="{Binding Instance}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/></StackPanel></DockPanel>

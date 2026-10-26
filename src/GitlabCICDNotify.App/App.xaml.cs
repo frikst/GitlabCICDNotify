@@ -25,6 +25,7 @@ public partial class App : Application
     private GitLabClient _api = null!;
     private readonly TaskCompletionSource _initialized = new();
     private readonly Dictionary<(Guid Account, long Project, long Pipeline), PipelineWindow> _pipelines = [];
+    public StartupService WindowsStartup { get; } = new();
     public Dashboard Dashboard { get; } = new();
     public MonitorService Monitor { get; private set; } = null!;
     public CancellationToken Stopping => _stop.Token;
@@ -39,6 +40,8 @@ public partial class App : Application
         try
         {
             _tray = new TrayService(ShowStatus, ShowSettings, ShowAbout, () => _ = ExitAsync());
+            try { WindowsStartup.Synchronize(); }
+            catch (Exception ex) { Dashboard.Log("Nepodarilo sa nastaviť spúšťanie pri prihlásení do Windows. Skúste voľbu zmeniť v nastaveniach. " + MonitorService.FriendlyError(ex)); }
             await Monitor.InitializeAsync(Stopping);
             _initialized.TrySetResult();
             Dashboard.Log("Sledovanie spustené. Okno môžete zatvoriť; aplikácia zostane v systray.");

@@ -21,6 +21,7 @@ internal static partial class Program
         {
             CheckUrls();
             CheckNotification();
+            StartupChecks();
             ApiChecks().GetAwaiter().GetResult();
             TriggeringUserChecks().GetAwaiter().GetResult();
             ETagChecks().GetAwaiter().GetResult();
@@ -356,7 +357,7 @@ internal static partial class Program
         }
         RenderProgress(folder);
         Render(new StatusWindow(app), Path.Combine(folder, "status.png"));
-        Render(new SettingsWindow(app), Path.Combine(folder, "settings.png"));
+        RenderStartupSettings(app, folder);
         Render(new ConnectAccountWindow(app), Path.Combine(folder, "connect-account.png"));
         Render(new AboutWindow(), Path.Combine(folder, "about.png"));
         Check(true, "Render status, settings, connect account and About windows");

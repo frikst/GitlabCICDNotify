@@ -2,6 +2,8 @@
 
 ## Implementované
 
+- Predvolene zapnuté spúšťanie pri prihlásení do Windows po prvom spustení aplikácie; opt-out checkbox v nastaveniach s okamžitým uložením pre aktuálny Windows profil.
+
 - .NET 10 WPF aplikácia štartujúca do tray; štyri položky menu vrátane dialógu O aplikácii s verziou, autorom a organizáciou, dvojklik na stav, skrytie a obnovenie existujúcich okien, explicitné ukončenie a obsluha ukončenia Windows relácie.
 - Viac účtov/inštancií cez osobné tokeny v samostatnom okne **Pripojiť účet**, ktoré sa otvára z nastavení. Režim je samostatný pre používateľa + inštanciu; nový účet má `TriggeringUser`, obnovenie tokenu zachová jeho voľbu.
 - Globálna stratégia, projektový fallback, režim autora, stránkovanie, cache projektov, podmienené GET cez ETag s obnovením tela a stránkovania pri 304, kontrolné body, retry, aktívne pipelines a perzistentná deduplikácia.
@@ -20,9 +22,11 @@
 - Prehľad/logy sa neukladajú ako kompletná história. `Notified` naopak rastie bez retencie. Toast a zápis jeho ID nie sú jedna transakcia; po páde je možné opakovanie.
 - Obnovenie prihlásenia aktualizuje token a e-maily, zatiaľ nie uložený `Username`/`Name`; premenovanie používateľa môže ovplyvniť projektový filter `username`.
 - Jeden koordinátor serializuje scany aj zmeny účtov; rozsiahly/pomalý scan môže odložiť zápis nastavení. Nie je implementovaný single-instance zámok ani koordinácia zápisov viacerých procesov.
-- Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, autostart, aktualizácie aplikácie, WebSocket/SSE a webhook prijímač nie sú implementované.
+- Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, aktualizácie aplikácie, WebSocket/SSE a webhook prijímač nie sú implementované.
 
 ## Overenie a zostávajúce živé kontroly
+
+Pri doplnení autostartu prešli dotnet format, Release build bez upozornení a 247 kontrol vrátane renderu a ovládania checkboxu. Izolované registračné kľúče overili predvolené zapnutie, citovanie cesty s medzerami, zachovanie vypnutia po reštarte služby, opätovné zapnutie, opravu cesty a zachovanie iných Run hodnôt. Náhľad nastavení bol vizuálne skontrolovaný. Skutočné spustenie po odhlásení/prihlásení do Windows zostáva neoverené.
 
 Pri doplnení priebehu pipeline prešli Release build bez upozornení a 237 kontrol vrátane HTTP/state fixture, toast XML, renderu piatich okien, výberu jobu a rušenia/obnovenia živého cyklu bez súbehu. Náhľady priebehu a Stav boli vizuálne skontrolované. Range/ETag trace na reálnom GitLabe a živá Windows foreground aktivácia cez **Zobraziť** (vrátane štartu ukončenej aplikácie) zostávajú neoverené. GitLab nemusí podporovať Range ani ETag na trace; vtedy sa počas behu prenáša celý log. Terminál uchováva koniec logu do 2 Mi znakov, najviac osem jobov na okno; logy sa neukladajú na disk.
 

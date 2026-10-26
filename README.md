@@ -8,7 +8,7 @@ Potrebujete Windows 10 2004 alebo novší / Windows 11. Release pre Windows x64 
 
 Pri použití ZIP rozbaľte celý obsah a spustite `GitlabCICDNotify.exe`. Lokálny framework-dependent výstup `artifacts/app/GitlabCICDNotify.exe` navyše potrebuje [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). Zachovajte aj ostatné súbory tohto priečinka. Zostavenie zo zdrojov opisuje [vývojový návod](doc/development.md).
 
-Po spustení aplikácia zostane v systémovej oblasti (systray). Pravým kliknutím otvoríte menu **Stav**, **Nastavenia**, **O aplikácii**, **Ukončiť**; dvojklik otvorí stav. Zatvorenie okna ponechá sledovanie na pozadí. Aplikáciu ukončíte cez menu. Dialóg **O aplikácii** zobrazuje verziu, autora, organizáciu a odkaz na web katedry. Automatické spúšťanie po prihlásení do Windows sa nenastavuje.
+Po spustení aplikácia zostane v systémovej oblasti (systray). Pravým kliknutím otvoríte menu **Stav**, **Nastavenia**, **O aplikácii**, **Ukončiť**; dvojklik otvorí stav. Zatvorenie okna ponechá sledovanie na pozadí. Aplikáciu ukončíte cez menu. Dialóg **O aplikácii** zobrazuje verziu, autora, organizáciu a odkaz na web katedry. Po prvom spustení sa aplikácia predvolene spúšťa aj pri prihlásení do Windows. V **Nastaveniach** ho vypnete zrušením zaškrtnutia **Spúšťať pri prihlásení do Windows**; zmena sa uloží ihneď a platí pre váš Windows účet. Pri prenosnej verzii ponechajte aplikáciu na stabilnom mieste; po presunutí ju spustite ručne, aby sa cesta aktualizovala.
 
 ## Prvé prihlásenie
 

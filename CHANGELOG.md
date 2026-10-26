@@ -6,6 +6,18 @@ Formát vychádza z [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0
 
 ## Unreleased
 
+## [1.1.0] - 2026-10-26
+
+### Added
+
+- Priebeh pipeline priamo v aplikácii cez akciu **Zobraziť** v oznámení alebo stavovom okne. Zobrazuje stages a joby s aktuálnym stavom a živý výstup vybraného jobu s možnosťou označenia a kopírovania; zatvorenie okna zastaví jeho načítavanie.
+- Automatické spúšťanie pri prihlásení do Windows, predvolene zapnuté po prvom spustení aplikácie. V nastaveniach ho možno vypnúť pre aktuálny Windows účet.
+- Výber témy **Podľa systému / Tmavá / Svetlá** s okamžitým uložením a prepnutím okien aj tray menu bez reštartu. Predvolene sa téma riadi Windows; terminál výstupu jobu zostáva tmavý.
+
+### Changed
+
+- MSI inštalátor má slovenského sprievodcu s potvrdením licencie GPL-3.0 a predvolene zaškrtnutou možnosťou spustiť aplikáciu po úspešnej inštalácii. Pri tichej inštalácii sa aplikácia nespúšťa.
+
 ## [1.0.0] - 2026-10-23
 
 ### Added

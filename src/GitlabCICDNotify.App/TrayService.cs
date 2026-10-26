@@ -42,6 +42,7 @@ public sealed class TrayService : NativeWindow, IDisposable
         _menuOpen = true;
         uint selected = 0;
         nint menu = 0;
+        nint backgroundBrush = 0;
         try
         {
             // Move the invisible owner to the anchor monitor before measuring its effective DPI.
@@ -55,6 +56,11 @@ public sealed class TrayService : NativeWindow, IDisposable
             foreach (var label in _labels) _width = Math.Max(_width, TextRenderer.MeasureText(label, _font).Width + (int)(52 * _scale));
             menu = CreatePopupMenu();
             if (menu == 0) throw new System.ComponentModel.Win32Exception();
+            var background = SystemInformation.HighContrast ? SystemColors.Menu : ThemeColor("SurfaceBrush", SystemColors.Menu);
+            backgroundBrush = CreateSolidBrush((uint)ColorTranslator.ToWin32(background));
+            if (backgroundBrush == 0) throw new System.ComponentModel.Win32Exception();
+            var info = new MenuInfo { Size = (uint)Marshal.SizeOf<MenuInfo>(), Mask = 2, Background = backgroundBrush };
+            if (!SetMenuInfo(menu, ref info)) throw new System.ComponentModel.Win32Exception();
             for (uint i = 0; i < _labels.Length; i++)
             {
                 var item = new MenuItemInfo
@@ -74,6 +80,7 @@ public sealed class TrayService : NativeWindow, IDisposable
         finally
         {
             if (menu != 0) DestroyMenu(menu);
+            if (backgroundBrush != 0) DeleteObject(backgroundBrush);
             PostMessage(Handle, 0, 0, 0);
             _menuOpen = false;
         }
@@ -100,8 +107,8 @@ public sealed class TrayService : NativeWindow, IDisposable
                 using var graphics = Graphics.FromHdc(item.Hdc);
                 var selected = (item.State & 1) != 0;
                 var highContrast = SystemInformation.HighContrast;
-                var background = highContrast ? (selected ? SystemColors.Highlight : SystemColors.Menu) : (selected ? Color.FromArgb(235, 232, 252) : Color.White);
-                var foreground = highContrast ? (selected ? SystemColors.HighlightText : SystemColors.MenuText) : Color.FromArgb(23, 36, 59);
+                var background = highContrast ? (selected ? SystemColors.Highlight : SystemColors.Menu) : (selected ? ThemeColor("HoverBrush", SystemColors.ControlLight) : ThemeColor("SurfaceBrush", SystemColors.Menu));
+                var foreground = highContrast ? (selected ? SystemColors.HighlightText : SystemColors.MenuText) : ThemeColor("InkBrush", SystemColors.MenuText);
                 var rect = Rectangle.FromLTRB(item.Bounds.Left, item.Bounds.Top, item.Bounds.Right, item.Bounds.Bottom);
                 using var brush = new SolidBrush(background);
                 graphics.FillRectangle(brush, rect);
@@ -114,6 +121,12 @@ public sealed class TrayService : NativeWindow, IDisposable
         base.WndProc(ref m);
     }
 
+    private static Color ThemeColor(string key, Color fallback)
+    {
+        if (System.Windows.Application.Current?.TryFindResource(key) is not System.Windows.Media.SolidColorBrush brush) return fallback;
+        return Color.FromArgb(brush.Color.R, brush.Color.G, brush.Color.B);
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -122,6 +135,17 @@ public sealed class TrayService : NativeWindow, IDisposable
         _tray.Visible = false; _tray.Dispose(); _icon.Dispose(); _font?.Dispose(); DestroyHandle();
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MenuInfo
+    {
+        public uint Size, Mask, Style, MaxHeight;
+        public nint Background;
+        public uint ContextHelpId;
+        public nuint Data;
+    }
+    [DllImport("gdi32.dll")] private static extern nint CreateSolidBrush(uint color);
+    [DllImport("gdi32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool DeleteObject(nint handle);
+    [DllImport("user32.dll", SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetMenuInfo(nint menu, ref MenuInfo info);
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct MenuItemInfo
     {

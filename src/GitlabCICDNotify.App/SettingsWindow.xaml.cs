@@ -10,14 +10,41 @@ public partial class SettingsWindow : Window
     private readonly App _app;
     private readonly StartupService _startup;
     private bool _startupEnabled;
+    private readonly ThemeService _themes;
+    private bool _refreshingTheme;
 
-    public SettingsWindow(App app, StartupService? startup = null)
+    public SettingsWindow(App app, StartupService? startup = null, ThemeService? themes = null)
     {
         InitializeComponent();
         _app = app;
         _startup = startup ?? app.WindowsStartup;
+        _themes = themes ?? app.Themes;
         DataContext = app.Dashboard;
-        IsVisibleChanged += (_, _) => { if (IsVisible) RefreshStartup(); };
+        IsVisibleChanged += (_, _) => { if (IsVisible) { RefreshStartup(); RefreshTheme(); } };
+    }
+
+    private void RefreshTheme()
+    {
+        _refreshingTheme = true;
+        try { ThemeChoice.SelectedValue = _themes.Preference; }
+        finally { _refreshingTheme = false; }
+    }
+
+    private void Theme_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_refreshingTheme || _themes == null || ThemeChoice.SelectedValue is not AppTheme theme) return;
+        try
+        {
+            _themes.SetPreference(theme);
+            Feedback.Foreground = ThemeService.Brush("SuccessBrush");
+            Feedback.Text = "Téma aplikácie bola uložená.";
+        }
+        catch
+        {
+            RefreshTheme();
+            Feedback.Foreground = ThemeService.Brush("ErrorBrush");
+            Feedback.Text = "Nepodarilo sa uložiť tému aplikácie. Overte oprávnenie na zápis do registra.";
+        }
     }
 
     private void RefreshStartup()
@@ -31,7 +58,7 @@ public partial class SettingsWindow : Window
         catch
         {
             StartWithWindows.IsEnabled = false;
-            Feedback.Foreground = Brushes.IndianRed;
+            Feedback.Foreground = ThemeService.Brush("ErrorBrush");
             Feedback.Text = "Nepodarilo sa načítať nastavenie spúšťania pri prihlásení do Windows. Otvorte nastavenia znova.";
         }
     }
@@ -43,13 +70,13 @@ public partial class SettingsWindow : Window
             var enabled = StartWithWindows.IsChecked == true;
             _startup.SetEnabled(enabled);
             _startupEnabled = enabled;
-            Feedback.Foreground = Brushes.SeaGreen;
+            Feedback.Foreground = ThemeService.Brush("SuccessBrush");
             Feedback.Text = enabled ? "Spúšťanie pri prihlásení do Windows bolo zapnuté." : "Spúšťanie pri prihlásení do Windows bolo vypnuté.";
         }
         catch
         {
             StartWithWindows.IsChecked = _startupEnabled;
-            Feedback.Foreground = Brushes.IndianRed;
+            Feedback.Foreground = ThemeService.Brush("ErrorBrush");
             Feedback.Text = "Nepodarilo sa zmeniť spúšťanie pri prihlásení do Windows. Overte oprávnenie na zápis do registra.";
         }
     }
@@ -71,7 +98,7 @@ public partial class SettingsWindow : Window
         try
         {
             await _app.Monitor.SetMonitoringModeAsync(row.Id, row.Mode, _app.Stopping);
-            Feedback.Foreground = Brushes.SeaGreen;
+            Feedback.Foreground = ThemeService.Brush("SuccessBrush");
             Feedback.Text = "Režim sledovania účtu bol uložený.";
             await _app.Monitor.PollAsync(_app.Stopping);
         }
@@ -79,5 +106,5 @@ public partial class SettingsWindow : Window
         catch (Exception ex) { ShowError(ex); }
         finally { button.IsEnabled = true; }
     }
-    private void ShowError(Exception ex) { Feedback.Foreground = Brushes.IndianRed; Feedback.Text = MonitorService.FriendlyError(ex); }
+    private void ShowError(Exception ex) { Feedback.Foreground = ThemeService.Brush("ErrorBrush"); Feedback.Text = MonitorService.FriendlyError(ex); }
 }

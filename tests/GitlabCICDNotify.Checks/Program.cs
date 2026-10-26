@@ -22,6 +22,7 @@ internal static partial class Program
             CheckUrls();
             CheckNotification();
             StartupChecks();
+            ThemePreferenceChecks();
             ApiChecks().GetAwaiter().GetResult();
             TriggeringUserChecks().GetAwaiter().GetResult();
             ETagChecks().GetAwaiter().GetResult();
@@ -343,18 +344,19 @@ internal static partial class Program
 
     private static void RenderWindows(bool desktop)
     {
-        var app = new App.App();
+        var app = new App.App(diagnosticMode: true);
         app.InitializeComponent();
         var folder = Path.GetFullPath("artifacts/previews");
         Directory.CreateDirectory(folder);
         var accountId = Guid.NewGuid();
-        app.Dashboard.Accounts.Add(new AccountRow(accountId, "jan.novak", "https://gitlab.example.com/", "Sleduje", "12 projektov · posledná kontrola 14:32:08", Brushes.SeaGreen));
+        app.Dashboard.Accounts.Add(new AccountRow(accountId, "jan.novak", "https://gitlab.example.com/", "Sleduje", "12 projektov · posledná kontrola 14:32:08", ThemeService.Brush("SuccessBrush")));
         app.Dashboard.AccountSettings.Add(new AccountSettingsRow(accountId, "jan.novak", "https://gitlab.example.com/", MonitoringMode.TriggeringUser));
         foreach (var item in new[] { (101L, "running", "feature/notifications"), (100L, "success", "main"), (99L, "failed", "fix/build-cache") })
         {
             app.Dashboard.Pipelines.Add(new PipelineRow(accountId, new Pipeline(item.Item1, 1, "team / deployment-service", item.Item3, "a7b648debaae", item.Item2,
                 "https://gitlab.example.com/team/project/-/pipelines/" + item.Item1, "push", DateTimeOffset.Now, DateTimeOffset.Now), "jan.novak", "https://gitlab.example.com/"));
         }
+        RenderThemes(app, folder, desktop);
         RenderProgress(folder);
         Render(new StatusWindow(app), Path.Combine(folder, "status.png"));
         RenderStartupSettings(app, folder);
@@ -390,7 +392,7 @@ internal static partial class Program
         app.ShowStatus();
         Check(status.WindowState == WindowState.Normal, "Tray action restores minimized status window");
         status.Close();
-        if (desktop) NativeMenuChecks.Run(Check);
+
         app.Shutdown();
     }
 

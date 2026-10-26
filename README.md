@@ -10,6 +10,8 @@ Pri použití ZIP rozbaľte celý obsah a spustite `GitlabCICDNotify.exe`. Loká
 
 Po spustení aplikácia zostane v systémovej oblasti (systray). Pravým kliknutím otvoríte menu **Stav**, **Nastavenia**, **O aplikácii**, **Ukončiť**; dvojklik otvorí stav. Zatvorenie okna ponechá sledovanie na pozadí. Aplikáciu ukončíte cez menu. Dialóg **O aplikácii** zobrazuje verziu, autora, organizáciu a odkaz na web katedry. Po prvom spustení sa aplikácia predvolene spúšťa aj pri prihlásení do Windows. V **Nastaveniach** ho vypnete zrušením zaškrtnutia **Spúšťať pri prihlásení do Windows**; zmena sa uloží ihneď a platí pre váš Windows účet. Pri prenosnej verzii ponechajte aplikáciu na stabilnom mieste; po presunutí ju spustite ručne, aby sa cesta aktualizovala.
 
+V **Nastaveniach → Téma aplikácie** vyberte **Podľa systému**, **Tmavá** alebo **Svetlá**. Predvolená voľba **Podľa systému** sleduje farby aplikácií vo Windows aj počas behu. Výber sa uloží ihneď pre váš Windows profil a bez reštartu zmení otvorené aj skryté okná a tray menu. Terminál výstupu jobu zostáva tmavý v oboch témach.
+
 ## Prvé prihlásenie
 
 1. Otvorte **Nastavenia** z tray menu a zvoľte **Pripojiť účet**.

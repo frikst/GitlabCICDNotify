@@ -1,4 +1,4 @@
-<Window x:Class="GitlabCICDNotify.App.PipelineWindow"
+<Window WindowStartupLocation="CenterScreen" Style="{StaticResource {x:Type Window}}" x:Class="GitlabCICDNotify.App.PipelineWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Priebeh pipeline · GitLab CI/CD Notify" Width="1160" Height="760" MinWidth="800" MinHeight="480">
@@ -10,19 +10,19 @@
         <Button Content="Otvoriť v GitLabe ↗" Click="Browser_Click" Margin="0"/>
       </StackPanel>
       <StackPanel Margin="0,0,16,0">
-        <TextBlock Text="PRIEBEH PIPELINE" FontSize="11" Foreground="{StaticResource AccentBrush}" FontWeight="Bold"/>
+        <TextBlock Text="PRIEBEH PIPELINE" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
         <TextBlock x:Name="PipelineTitle" FontSize="23" FontWeight="SemiBold" Margin="0,5,0,4" TextTrimming="CharacterEllipsis"/>
         <TextBlock x:Name="PipelineDetail" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis"/>
       </StackPanel>
     </DockPanel>
     <Grid Grid.Row="1">
       <Grid.ColumnDefinitions><ColumnDefinition Width="280" MinWidth="180"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*" MinWidth="300"/></Grid.ColumnDefinitions>
-      <Border Background="White" BorderBrush="#E4E8F0" BorderThickness="1" CornerRadius="10">
+      <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
         <DockPanel Margin="12">
           <TextBlock DockPanel.Dock="Top" Text="STAGES A JOBY" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="6,4,0,12"/>
           <TreeView x:Name="JobsTree" BorderThickness="0" Background="Transparent" SelectedItemChanged="Job_Selected" ScrollViewer.HorizontalScrollBarVisibility="Auto">
             <TreeView.Resources>
-              <Style TargetType="TreeViewItem"><Setter Property="Padding" Value="4,7"/><Setter Property="IsExpanded" Value="True"/></Style>
+              <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}"><Setter Property="Foreground" Value="{DynamicResource InkBrush}"/><Setter Property="Padding" Value="4,7"/><Setter Property="IsExpanded" Value="True"/></Style>
             </TreeView.Resources>
           </TreeView>
         </DockPanel>
@@ -40,6 +40,6 @@
         </DockPanel>
       </Border>
     </Grid>
-    <TextBlock Grid.Row="2" x:Name="ConnectionState" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="2,12,0,0" TextWrapping="Wrap"/>
+    <TextBlock Grid.Row="2" x:Name="ConnectionState" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="2,12,0,0" TextWrapping="Wrap"/>
   </Grid>
 </Window>

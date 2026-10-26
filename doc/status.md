@@ -2,6 +2,8 @@
 
 ## Implementované
 
+- Témy **Podľa systému / Tmavá / Svetlá** v nastaveniach, predvolene podľa farieb aplikácií Windows. Okamžité uloženie pre Windows profil, prepnutie otvorených aj skrytých okien, stavových farieb a tray menu bez reštartu. Terminál zostáva tmavý.
+
 - Predvolene zapnuté spúšťanie pri prihlásení do Windows po prvom spustení aplikácie; opt-out checkbox v nastaveniach s okamžitým uložením pre aktuálny Windows profil.
 
 - .NET 10 WPF aplikácia štartujúca do tray; štyri položky menu vrátane dialógu O aplikácii s verziou, autorom a organizáciou, dvojklik na stav, skrytie a obnovenie existujúcich okien, explicitné ukončenie a obsluha ukončenia Windows relácie.
@@ -25,6 +27,8 @@
 - Úložisko nemá verziu schémy ani automatickú zálohu. Automatická obnova tokenu, aktualizácie aplikácie, WebSocket/SSE a webhook prijímač nie sú implementované.
 
 ## Overenie a zostávajúce živé kontroly
+
+Pri doplnení tém prešli dotnet format, Release build bez upozornení a 283 kontrol s --desktop, vrátane renderu svetlých a tmavých okien, okamžitého prepnutia otvoreného okna, zachovania výberu po reštarte služby, chyby zápisu, predvolenej/neznámej hodnoty, simulovanej zmeny systémovej témy a natívnej menu slučky v oboch paletách. Náhľady nastavení, stavu, pripojenia účtu, dialógu O aplikácii a priebehu boli vizuálne skontrolované. Render testy používajú diagnostický startup bez produkčných účtov a autostartu. Skutočné prepnutie Windows témy počas behu, vysoký kontrast, zmiešané DPI a menu z panela skrytých ikon zostávajú neoverené.
 
 Pri doplnení autostartu prešli dotnet format, Release build bez upozornení a 247 kontrol vrátane renderu a ovládania checkboxu. Izolované registračné kľúče overili predvolené zapnutie, citovanie cesty s medzerami, zachovanie vypnutia po reštarte služby, opätovné zapnutie, opravu cesty a zachovanie iných Run hodnôt. Náhľad nastavení bol vizuálne skontrolovaný. Skutočné spustenie po odhlásení/prihlásení do Windows zostáva neoverené.
 

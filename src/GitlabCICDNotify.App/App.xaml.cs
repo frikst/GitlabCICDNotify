@@ -13,6 +13,10 @@ namespace GitlabCICDNotify.App;
 
 public partial class App : Application
 {
+    private readonly bool _diagnosticMode;
+    public App() : this(false) { }
+    public App(bool diagnosticMode) => _diagnosticMode = diagnosticMode;
+
     private readonly CancellationTokenSource _stop = new();
     private HttpClient? _http;
     private TrayService? _tray;
@@ -25,6 +29,7 @@ public partial class App : Application
     private GitLabClient _api = null!;
     private readonly TaskCompletionSource _initialized = new();
     private readonly Dictionary<(Guid Account, long Project, long Pipeline), PipelineWindow> _pipelines = [];
+    public ThemeService Themes { get; } = new();
     public StartupService WindowsStartup { get; } = new();
     public Dashboard Dashboard { get; } = new();
     public MonitorService Monitor { get; private set; } = null!;
@@ -32,6 +37,8 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        // Application queues startup even without Run(); render tests must remain isolated.
+        if (_diagnosticMode) return;
         base.OnStartup(e);
         _http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(30) };
         _api = new GitLabClient(_http);
@@ -39,6 +46,8 @@ public partial class App : Application
         ToastNotificationManagerCompat.OnActivated += ToastActivated;
         try
         {
+            try { Themes.Initialize(); }
+            catch (Exception ex) { Dashboard.Log("Nepodarilo sa načítať tému. " + MonitorService.FriendlyError(ex)); Themes.Refresh(); }
             _tray = new TrayService(ShowStatus, ShowSettings, ShowAbout, () => _ = ExitAsync());
             try { WindowsStartup.Synchronize(); }
             catch (Exception ex) { Dashboard.Log("Nepodarilo sa nastaviť spúšťanie pri prihlásení do Windows. Skúste voľbu zmeniť v nastaveniach. " + MonitorService.FriendlyError(ex)); }
@@ -144,5 +153,5 @@ public partial class App : Application
     {
         _exiting = true; _stop.Cancel(); _tray?.Dispose(); base.OnSessionEnding(e);
     }
-    protected override void OnExit(ExitEventArgs e) { ToastNotificationManagerCompat.OnActivated -= ToastActivated; _stop.Cancel(); _tray?.Dispose(); _http?.Dispose(); base.OnExit(e); }
+    protected override void OnExit(ExitEventArgs e) { Themes.Dispose(); ToastNotificationManagerCompat.OnActivated -= ToastActivated; _stop.Cancel(); _tray?.Dispose(); _http?.Dispose(); base.OnExit(e); }
 }

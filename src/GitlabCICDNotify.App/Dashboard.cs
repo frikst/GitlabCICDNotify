@@ -37,10 +37,10 @@ public sealed record PipelineRow(Guid AccountId, Pipeline Pipeline, string Usern
     };
     public Brush Color => Pipeline.Status switch
     {
-        "success" => Brushes.SeaGreen,
-        "failed" => Brushes.IndianRed,
-        "running" or "pending" or "created" or "preparing" => Brushes.SlateBlue,
-        _ => Brushes.SlateGray
+        "success" => ThemeService.Brush("SuccessBrush"),
+        "failed" => ThemeService.Brush("ErrorBrush"),
+        "running" or "pending" or "created" or "preparing" => ThemeService.Brush("ProgressBrush"),
+        _ => ThemeService.Brush("MutedBrush")
     };
 }
 

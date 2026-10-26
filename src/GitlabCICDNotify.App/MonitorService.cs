@@ -25,7 +25,7 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
         {
             _accounts.AddRange(await store.LoadAsync(ct));
             RefreshAccountSettings();
-            foreach (var account in _accounts) SetState(account, "Pripravené", "Čaká na prvú kontrolu", Brushes.SlateBlue);
+            foreach (var account in _accounts) SetState(account, "Pripravené", "Čaká na prvú kontrolu", ThemeService.Brush("ProgressBrush"));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -59,7 +59,7 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
             _retries.Remove(account.Id);
             api.InvalidateAccount(account.Id);
             RefreshAccountSettings();
-            SetState(account, "Pripojené", "Prihlásenie overené · read_api", Brushes.SeaGreen);
+            SetState(account, "Pripojené", "Prihlásenie overené · read_api", ThemeService.Brush("SuccessBrush"));
             dashboard.Log($"Pripojený účet @{account.Username} na {account.Instance}");
         }
         finally { _gate.Release(); }
@@ -121,7 +121,7 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
             _retries.Remove(account.Id);
             api.InvalidateAccount(account.Id);
             foreach (var pipeline in dashboard.Pipelines.Where(p => p.AccountId == account.Id).ToList()) dashboard.Pipelines.Remove(pipeline);
-            SetState(account, "Pripravené", ModeLabel(mode) + " · čaká na kontrolu", Brushes.SlateBlue);
+            SetState(account, "Pripravené", ModeLabel(mode) + " · čaká na kontrolu", ThemeService.Brush("ProgressBrush"));
             RefreshAccountSettings();
             dashboard.Log($"@{account.Username} na {account.Instance}: {ModeLabel(mode)}. Nový režim platí od tejto chvíle pre tento účet.");
         }
@@ -144,7 +144,7 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
             foreach (var account in _accounts)
             {
                 if (_retries.TryGetValue(account.Id, out var retry) && retry.Retry > DateTimeOffset.UtcNow) continue;
-                SetState(account, "Kontrolujem…", ModeLabel(account.MonitoringMode), Brushes.SlateBlue);
+                SetState(account, "Kontrolujem…", ModeLabel(account.MonitoringMode), ThemeService.Brush("ProgressBrush"));
                 try
                 {
                     var scan = await api.ScanAsync(account, ct);
@@ -170,7 +170,7 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
                     catch { account.Checkpoint = previous; account.ActivePipelines = previousActive; throw; }
                     _retries.Remove(account.Id);
                     var method = scan.UsesGlobalEndpoint ? "Globálne API" : $"{scan.ProjectCount} projektov";
-                    SetState(account, "Sleduje", $"{ModeLabel(account.MonitoringMode)} · {method} · {DateTime.Now:HH:mm:ss}", Brushes.SeaGreen);
+                    SetState(account, "Sleduje", $"{ModeLabel(account.MonitoringMode)} · {method} · {DateTime.Now:HH:mm:ss}", ThemeService.Brush("SuccessBrush"));
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
                 catch (Exception ex)
@@ -180,7 +180,7 @@ public sealed class MonitorService(GitLabClient api, StateStore store, IPipeline
                     if (ex is GitLabApiException { RetryAfter: { } requested } && requested > delay) delay = requested;
                     _retries[account.Id] = (failures, DateTimeOffset.UtcNow + delay);
                     var message = FriendlyError(ex);
-                    SetState(account, "Vyžaduje pozornosť", message, Brushes.IndianRed);
+                    SetState(account, "Vyžaduje pozornosť", message, ThemeService.Brush("ErrorBrush"));
                     dashboard.Log($"@{account.Username}: {message} Ďalší pokus o {DateTimeOffset.Now.Add(delay):HH:mm:ss}.");
                 }
             }

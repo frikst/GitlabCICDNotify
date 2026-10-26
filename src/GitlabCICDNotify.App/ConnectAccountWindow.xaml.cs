@@ -26,13 +26,13 @@ public partial class ConnectAccountWindow : Window
     private async void Connect_Click(object sender, RoutedEventArgs e)
     {
         ConnectButton.IsEnabled = false;
-        Feedback.Foreground = Brushes.SlateGray;
+        Feedback.Foreground = ThemeService.Brush("MutedBrush");
         Feedback.Text = "Overujem prihlásenie…";
         try
         {
             await _app.Monitor.AddAsync(InstanceBox.Text, TokenBox.Password, _app.Stopping);
             TokenBox.Clear();
-            Feedback.Foreground = Brushes.SeaGreen;
+            Feedback.Foreground = ThemeService.Brush("SuccessBrush");
             Feedback.Text = "Účet bol pripojený. Sledovanie beží na pozadí.";
             await _app.Monitor.PollAsync(_app.Stopping);
         }
@@ -41,5 +41,5 @@ public partial class ConnectAccountWindow : Window
         finally { ConnectButton.IsEnabled = true; }
     }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
-    private void ShowError(Exception ex) { Feedback.Foreground = Brushes.IndianRed; Feedback.Text = MonitorService.FriendlyError(ex); }
+    private void ShowError(Exception ex) { Feedback.Foreground = ThemeService.Brush("ErrorBrush"); Feedback.Text = MonitorService.FriendlyError(ex); }
 }

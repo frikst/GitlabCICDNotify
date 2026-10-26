@@ -215,9 +215,9 @@ public partial class PipelineWindow : Window
     };
     private static Brush StatusColor(string status) => status switch
     {
-        "success" => Brushes.SeaGreen,
-        "failed" => Brushes.IndianRed,
-        "running" => Brushes.SlateBlue,
-        _ => Brushes.SlateGray
+        "success" => ThemeService.Brush("SuccessBrush"),
+        "failed" => ThemeService.Brush("ErrorBrush"),
+        "running" => ThemeService.Brush("ProgressBrush"),
+        _ => ThemeService.Brush("MutedBrush")
     };
 }

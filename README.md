@@ -4,7 +4,7 @@ Windows aplikácia v .NET 10 + WPF, ktorá na pozadí sleduje GitLab pipelines a
 
 ## Spustenie
 
-Potrebujete Windows 10 2004 alebo novší / Windows 11. Release pre Windows x64 obsahuje MSI inštalátor a prenosný ZIP s pribaleným .NET runtime. MSI inštaluje aplikáciu pre všetkých používateľov (vyžaduje správcu) a pridá odkaz do ponuky Štart. Pred aktualizáciou alebo odinštalovaním aplikáciu ukončite cez tray menu. Používateľské účty zostávajú zachované aj po odinštalovaní.
+Potrebujete Windows 10 2004 alebo novší / Windows 11. Release pre Windows x64 obsahuje MSI inštalátor a prenosný ZIP s pribaleným .NET runtime. MSI inštaluje aplikáciu pre všetkých používateľov (vyžaduje správcu) a pridá odkaz do ponuky Štart. Sprievodca vyžaduje potvrdenie licencie GPL-3.0 a po úspešnej inštalácii ponúkne predvolene zaškrtnutú možnosť spustiť aplikáciu; ak ju nechcete spustiť, zrušte zaškrtnutie. Tichá inštalácia aplikáciu nespúšťa. Pred aktualizáciou alebo odinštalovaním aplikáciu ukončite cez tray menu. Používateľské účty zostávajú zachované aj po odinštalovaní.
 
 Pri použití ZIP rozbaľte celý obsah a spustite `GitlabCICDNotify.exe`. Lokálny framework-dependent výstup `artifacts/app/GitlabCICDNotify.exe` navyše potrebuje [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). Zachovajte aj ostatné súbory tohto priečinka. Zostavenie zo zdrojov opisuje [vývojový návod](doc/development.md).
 

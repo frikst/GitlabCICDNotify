@@ -1,10 +1,20 @@
 <Project Sdk="WixToolset.Sdk/6.0.2">
-  <PropertyGroup>
-    <OutputType>Package</OutputType>
-    <OutputName>GitlabCICDNotify</OutputName>
-    <InstallerPlatform>x64</InstallerPlatform>
-    <ReleaseVersion Condition="'$(ReleaseVersion)' == ''">0.0.0</ReleaseVersion>
-    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\publish</PublishDir>
-    <DefineConstants>$(DefineConstants);ReleaseVersion=$(ReleaseVersion);PublishDir=$(PublishDir)</DefineConstants>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Package</OutputType>
+        <OutputName>GitlabCICDNotify</OutputName>
+        <InstallerPlatform>x64</InstallerPlatform>
+        <Cultures>sk-SK</Cultures>
+        <ReleaseVersion Condition="'$(ReleaseVersion)' == ''">0.0.0</ReleaseVersion>
+        <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\publish</PublishDir>
+        <DefineConstants>$(DefineConstants);ReleaseVersion=$(ReleaseVersion);PublishDir=$(PublishDir);LicenseRtf=$(MSBuildThisFileDirectory)obj\$(Configuration)\License.rtf</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
+    </ItemGroup>
+    <Target Name="GenerateLicenseRtf" BeforeTargets="BeforeBuild"
+                    Inputs="$(MSBuildThisFileDirectory)..\LICENSE;$(MSBuildThisFileDirectory)..\build\Convert-LicenseToRtf.ps1"
+                    Outputs="$(MSBuildThisFileDirectory)obj\$(Configuration)\License.rtf">
+        <MakeDir Directories="$(MSBuildThisFileDirectory)obj\$(Configuration)" />
+        <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\build\Convert-LicenseToRtf.ps1&quot; -LicensePath &quot;$(MSBuildThisFileDirectory)..\LICENSE&quot; -OutputPath &quot;$(MSBuildThisFileDirectory)obj\$(Configuration)\License.rtf&quot;" />
+    </Target>
 </Project>

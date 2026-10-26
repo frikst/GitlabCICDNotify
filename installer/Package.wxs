@@ -1,32 +1,44 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="GitLab CI/CD Notify" Manufacturer="GitLab CI/CD Notify"
-           Version="$(ReleaseVersion)" Language="1051" Scope="perMachine"
-           UpgradeCode="D2C7A795-8D3B-48BE-A46B-B1C31D732F51">
-    <MajorUpgrade DowngradeErrorMessage="Novšia verzia aplikácie GitLab CI/CD Notify je už nainštalovaná." />
-    <MediaTemplate EmbedCab="yes" />
-    <Icon Id="AppIcon.exe" SourceFile="$(PublishDir)\GitlabCICDNotify.exe" />
-    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+    <Package Name="GitLab CI/CD Notify" Manufacturer="GitLab CI/CD Notify"
+                      Version="$(ReleaseVersion)" Language="1051" Scope="perMachine"
+                      UpgradeCode="D2C7A795-8D3B-48BE-A46B-B1C31D732F51">
+        <MajorUpgrade DowngradeErrorMessage="Novšia verzia aplikácie GitLab CI/CD Notify je už nainštalovaná." />
+        <MediaTemplate EmbedCab="yes" />
+        <Icon Id="AppIcon.exe" SourceFile="$(PublishDir)\GitlabCICDNotify.exe" />
+        <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
 
-    <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="GitLab CI-CD Notify" />
-    </StandardDirectory>
-    <StandardDirectory Id="ProgramMenuFolder" />
+        <ui:WixUI Id="WixUI_Minimal" />
+        <UIRef Id="WixUI_ErrorProgressText" />
+        <WixVariable Id="WixUILicenseRtf" Value="$(LicenseRtf)" />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Spustiť GitLab CI/CD Notify" />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+        <CustomAction Id="LaunchApplication" FileRef="ApplicationExe" ExeCommand=""
+                                    Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+        <UI>
+            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication"
+                              Order="1" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed AND NOT REMOVE AND UILevel = 5" />
+        </UI>
 
-    <Feature Id="Application" Title="GitLab CI/CD Notify" Level="1">
-      <ComponentGroupRef Id="PublishedFiles" />
-    </Feature>
-  </Package>
-  <Fragment>
-    <ComponentGroup Id="PublishedFiles" Directory="INSTALLFOLDER">
-      <Component Id="ApplicationExecutable" Guid="B0675B5B-6C19-4DCA-A6C0-DA1EF651BBE3">
-        <File Id="ApplicationExe" Source="$(PublishDir)\GitlabCICDNotify.exe" KeyPath="yes">
-          <Shortcut Id="AppShortcut" Directory="ProgramMenuFolder" Name="GitLab CI-CD Notify"
-                    WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.exe" Advertise="yes" />
-        </File>
-      </Component>
-      <Files Include="$(PublishDir)\**">
-        <Exclude Files="$(PublishDir)\GitlabCICDNotify.exe" />
-      </Files>
-    </ComponentGroup>
-  </Fragment>
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLFOLDER" Name="GitLab CI-CD Notify" />
+        </StandardDirectory>
+        <StandardDirectory Id="ProgramMenuFolder" />
+
+        <Feature Id="Application" Title="GitLab CI/CD Notify" Level="1">
+            <ComponentGroupRef Id="PublishedFiles" />
+        </Feature>
+    </Package>
+    <Fragment>
+        <ComponentGroup Id="PublishedFiles" Directory="INSTALLFOLDER">
+            <Component Id="ApplicationExecutable" Guid="B0675B5B-6C19-4DCA-A6C0-DA1EF651BBE3">
+                <File Id="ApplicationExe" Source="$(PublishDir)\GitlabCICDNotify.exe" KeyPath="yes">
+                    <Shortcut Id="AppShortcut" Directory="ProgramMenuFolder" Name="GitLab CI-CD Notify"
+                                        WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.exe" Advertise="yes" />
+                </File>
+            </Component>
+            <Files Include="$(PublishDir)\**">
+                <Exclude Files="$(PublishDir)\GitlabCICDNotify.exe" />
+            </Files>
+        </ComponentGroup>
+    </Fragment>
 </Wix>

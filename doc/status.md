@@ -8,6 +8,7 @@
 - Toast s URL akciou aj akciou **Zobraziť** na otvorenie WPF priebehu pipeline; rovnaká akcia je v okne Stav. Priebeh obsahuje stage/job strom vrátane trigger jobov, stavové ikony a živý read-only terminál s výberom a kopírovaním. Polling iba pre meniteľné stavy a vybraný log, Range/ETag s fallbackom, finálny odber, backoff, zrušenie pri skrytí a obnovenie okna.
 - Farebný prehľad posledných 100 pipelines relácie a predvolene zbalené logy (200 správ v pamäti).
 - DPAPI úložisko s ochranou pred prepísaním po chybe načítania. Funkčné kontroly, render všetkých piatich okien a natívne desktop kontroly. Lokálny publish adresár.
+- MSI má slovenského sprievodcu s potvrdením licencie GPL-3.0 a predvolene zaškrtnutou možnosťou spustiť aplikáciu po úspešnej inštalácii. Spustenie možno vypnúť; pri tichej inštalácii ani údržbe sa aplikácia nespúšťa.
 - GitHub Actions release workflow pre tagy `vX.Y.Z`: self-contained Windows x64 ZIP, MSI cez WiX a release poznámky zo sekcie verzie v changelogu. Bez spúšťania kontrolného programu a bez dočasných Actions artefaktov.
 
 ## Známe hranice
@@ -36,3 +37,5 @@ Pri doplnení dialógu O aplikácii prešli Release build, 128 kontrol vrátane 
 Po presune pripojenia účtu do samostatného okna prešli Release build bez upozornení a 126 kontrol vrátane renderu štyroch okien, skrytia nového okna, vymazania vloženého tokenu a jeho opätovného otvorenia a obnovenia z minimalizácie. Náhľady nastavení a pripojenia účtu boli vizuálne skontrolované.
 
 Reálny GitLab login, doručenie Windows toastu a otvorenie jeho URL neboli overené skutočným účtom. Test toastu kontroluje XML, nie shellové doručenie. Ručne treba overiť menu z panela skrytých ikon, klávesovú aktiváciu tray ikony, rôzne polohy taskbaru, zmiešané DPI, prepínanie kontrastu a Windows logoff. Manifest/renderer obsahujú podporu DPI a high contrast, ale samotný kód nie je dôkaz ich plného správania v shelli.
+
+Pri doplnení licencie a voliteľného spustenia prešli formátovanie, self-contained publish a zostavenie MSI s WiX/ICE validáciou bez upozornení. Kontrola tabuliek MSI potvrdila blokovanie inštalačného tlačidla bez súhlasu, predvolené zaškrtnutie spustenia a jeho väzbu iba na dokončenie interaktívnej inštalácie. Obsah generovaného RTF bol porovnaný s celým LICENSE cez RichTextBox (bez koncového zalomenia riadka). Vizuálne zobrazenie sprievodcu a živá inštalácia vrátane spustenia aplikácie zostávajú neoverené; runtime nástroja na ovládanie okien sa nepodarilo spustiť.
